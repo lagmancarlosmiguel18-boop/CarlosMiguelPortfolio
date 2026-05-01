@@ -146,13 +146,13 @@ img {
 
 @keyframes animateBlob {
   0% {
-    transform: rotate(0deg); /* BUG FIX 1: '0' → '0deg' (unitless angle is invalid in rotate()) */
+    transform: rotate(0deg);
   }
   100% {
     transform: rotate(360deg);
   }
 }
-/* Blob */
+
 .blob {
   width: 250px;
   height: 250px;
@@ -164,6 +164,7 @@ img {
   position: absolute;
   z-index: -1;
 }
+
 /*=============== HEADER & NAV ===============*/
 .header {
   position: fixed;
@@ -196,7 +197,7 @@ img {
   font-weight: var(--font-semi-bold);
   color: var(--title-color);
   transition: color 0.4s;
-   margin-left: -0.5rem;
+  margin-left: -0.5rem;
 }
 
 .nav__logo:hover {
@@ -213,7 +214,6 @@ img {
 
 .nav__link {
   color: var(--title-color);
-  /* BUG FIX 2: font shorthand order must be: style weight size/line-height family */
   font-size: var(--small-font-size);
   font-family: var(--second-font);
   font-weight: var(--font-semi-bold);
@@ -262,7 +262,6 @@ img {
   z-index: -1;
 }
 
-/* BUG FIX 3: '.home__prefil' → '.home__perfil' (consistent spelling used in breakpoints) */
 .home__perfil {
   width: 320px;
   justify-self: center;
@@ -290,9 +289,9 @@ img {
 .home__info {
   z-index: 2;
   bottom: -1rem;
-  justify-self: center; /* BUG FIX 4: justify-self only works in grid children; added left/right fallback below */
+  justify-self: center;
   left: 50%;
-  transform: translateX(-50%); /* BUG FIX 4: centers absolutely positioned element properly */
+  transform: translateX(-50%);
 }
 
 .home__split {
@@ -334,7 +333,7 @@ img {
 .home__social {
   z-index: 2;
   left: 0;
-  align-self: center; /* BUG FIX 5: align-self only works in flex/grid children; added top: 50% fallback */
+  align-self: center;
   top: 50%;
   transform: translateY(-50%);
   display: flex;
@@ -359,7 +358,7 @@ img {
   bottom: 8.5rem;
   rotate: -90deg;
   color: var(--text-color-light);
-  font-size: var(--small-font-size); /* BUG FIX 6: font shorthand broken out for safety (same issue as nav__link) */
+  font-size: var(--small-font-size);
   font-family: var(--second-font);
   font-weight: var(--font-medium);
   display: flex;
@@ -375,6 +374,7 @@ img {
 .home__cv:hover {
   color: var(--first-color);
 }
+
 /*=============== BUTTON ===============*/
 .button {
   background-color: var(--body-color);
@@ -456,6 +456,7 @@ img {
               hsla(240, 100%, 2%, 0) 60%,
               var(--body-color) 95%);
 }
+
 /*=============== PROJECTS ===============*/
 .projects__image {
   position: relative;
@@ -470,7 +471,6 @@ img {
 .projects__img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
   object-fit: contain;
   border-radius: 1.5rem;
 }
@@ -488,7 +488,6 @@ img {
   overflow: hidden;
 }
 
-/* FIX: hover now targets button inside card, not inside image */
 .projects__card:hover .projects__button {
   opacity: 1;
   pointer-events: initial;
@@ -572,6 +571,7 @@ img {
   opacity: 1;
   pointer-events: initial;
 }
+
 /* Swiper class */
 .projects__swiper {
   margin-inline: initial;
@@ -586,6 +586,7 @@ img {
   background-color: var(--first-color);
   transition: opacity .4s;
 }
+
 /*=============== WORK ===============*/
 .work__tabs {
   background-color: var(--container-color);
@@ -658,6 +659,7 @@ img {
               var(--first-color-alt-2));
   position: absolute;
   left: -.25rem;
+  top: 0;
 }
 
 .work__line::after {
@@ -767,7 +769,6 @@ img {
   transition: rotate .4s;
 }
 
-
 /* Hide services info */
 .services-close .services__info {
   height: 0;
@@ -818,6 +819,9 @@ img {
 .testimonials__data {
   position: relative;
   z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .testimonials__img {
@@ -855,6 +859,12 @@ img {
   font-size: var(--h3-font-size);
 }
 
+.testimonials__description {
+  font-size: var(--small-font-size);
+  margin-top: 1rem;
+  text-align: center;
+}
+
 .testimonials__content {
   display: flex;
   width: max-content;
@@ -870,6 +880,7 @@ img {
 .testimonials__content:hover {
   animation-play-state: paused;
 }
+
 /* Infinite scroll animation */
 @keyframes scroll {
   0% {
@@ -889,7 +900,6 @@ img {
 /*=============== SCROLL BAR ===============*/
 
 
-
 /*=============== BREAKPOINTS ===============*/
 /* For small devices */
 @media screen and (max-width: 320px) {
@@ -901,8 +911,6 @@ img {
     width: 220px;
     height: 220px;
   }
-
-
 
   .projects__card {
     width: 300px;
@@ -917,10 +925,9 @@ img {
   .projects__title {
     font-size: var(--h3-font-size);
   }
-  
 }
 
-.projects__card{
+.projects__card {
   padding-inline: 1rem;
 }
 
@@ -939,11 +946,12 @@ img {
     width: 460px;
     margin-inline: auto;
   }
+
   .projects__card {
     width: 360px;
   }
 
-  .about__container, 
+  .about__container,
   .work__container,
   .services__container {
     grid-template-columns: 460px;
@@ -956,43 +964,44 @@ img {
   }
 
   :is(.projects, .testimonials) .section__title {
-  text-align: center;
-  margin-left: 0;
+    text-align: center;
+    margin-left: 0;
   }
 
-  .projects__card{
+  .projects__card {
     width: 350px;
   }
 
   .work__tabs {
-  width: 330px;
-  justify-self: center;
+    width: 330px;
+    justify-self: center;
   }
 
   .work__card {
-  grid-template-columns: repeat(2, 270px);
-  justify-content: center;
-  column-gap: 3rem;
+    grid-template-columns: repeat(2, 270px);
+    justify-content: center;
+    column-gap: 3rem;
   }
 
-.work__line {
-  left: 0;
-  right: 0;
-  margin-inline: auto;
+  .work__line {
+    left: 0;
+    right: 0;
+    margin-inline: auto;
   }
 
   .services__container {
-  grid-template-columns: repeat(2, 350px);
-  align-items: flex-start;
+    grid-template-columns: repeat(2, 350px);
+    align-items: flex-start;
   }
 }
 
+/* FIX: .work__container and .work__area moved INSIDE the 768px media query */
 @media screen and (min-width: 768px) {
   .home__container {
     width: 600px;
   }
 
-   .projects__card {
+  .projects__card {
     width: 400px;
     padding: 2rem;
   }
@@ -1000,15 +1009,15 @@ img {
   .projects__image {
     aspect-ratio: 16 / 9;
   }
-}
 
   .work__container {
-  grid-template-columns: 600px;
-}
-
-.work__area {
-  padding-left: 0;
+    grid-template-columns: 600px;
   }
+
+  .work__area {
+    padding-left: 0;
+  }
+}
 
 /* For large devices */
 @media screen and (min-width: 1150px) {
@@ -1017,14 +1026,14 @@ img {
   }
 
   .section {
-  padding-block: 7rem 2rem;
+    padding-block: 7rem 2rem;
   }
 
-.section__title {
-  margin-bottom: 4rem;
+  .section__title {
+    margin-bottom: 4rem;
   }
 
-  .blob{
+  .blob {
     width: 300px;
     height: 300px;
   }
@@ -1119,7 +1128,6 @@ img {
     right: 0;
   }
 
-  /* FIX: moved about large-screen styles INSIDE the 1150px media query */
   .about__container {
     grid-template-columns: repeat(2, 500px);
     align-items: center;
@@ -1167,79 +1175,79 @@ img {
   }
 
   .projects {
-  padding-block: 9rem 4rem;
+    padding-block: 9rem 4rem;
   }
 
-.projects__swiper {
-  padding-bottom: 4rem;
+  .projects__swiper {
+    padding-bottom: 4rem;
   }
 
-.projects__container {
-  max-width: 1380px;
+  .projects__container {
+    max-width: 1380px;
   }
 
-.projects__card {
-  width: 440px;
-  padding: 2.5rem;
-  border-radius: 4rem;
+  .projects__card {
+    width: 440px;
+    padding: 2.5rem;
+    border-radius: 4rem;
   }
 
-.projects__subtitle,
-.projects__description {
-  font-size: var(--normal-font-size);
+  .projects__subtitle,
+  .projects__description {
+    font-size: var(--normal-font-size);
   }
 
-.projects__img {
-  border-radius: 2rem;
+  .projects__img {
+    border-radius: 2rem;
   }
 
-.projects__button {
-  top: 1.5rem;
-  right: 1.5rem;
+  .projects__button {
+    top: 1.5rem;
+    right: 1.5rem;
   }
 
   .work__container {
-  grid-template-columns: 1050px;
-  row-gap: 3rem;
+    grid-template-columns: 1050px;
+    row-gap: 3rem;
   }
 
-.work__content {
-  row-gap: 5rem;
+  .work__content {
+    row-gap: 5rem;
   }
 
-.work__card {
-  grid-template-columns: repeat(2, 450px);
-  column-gap: 9rem;
+  .work__card {
+    grid-template-columns: repeat(2, 450px);
+    column-gap: 9rem;
   }
 
   .work__title {
-  font-size: var(--bigger-font-size);
+    font-size: var(--bigger-font-size);
   }
 
-.work__subtitle,
-.work__description {
-  font-size: var(--h3-font-size);
+  .work__subtitle,
+  .work__description {
+    font-size: var(--h3-font-size);
   }
 
   .services__container {
-  grid-template-columns: repeat(2, 455px);
-  column-gap: 5rem;
+    grid-template-columns: repeat(2, 455px);
+    column-gap: 5rem;
   }
 
   .services__card {
-  padding: 3rem 3rem 4rem 3rem;
-  border-radius: 4rem;
-  row-gap: 2rem;
+    padding: 3rem 3rem 4rem 3rem;
+    border-radius: 4rem;
+    row-gap: 2rem;
   }
 
   .services__title {
-  font-size: var(--h1-font-size);
-  margin-bottom: 1rem;
+    font-size: var(--h1-font-size);
+    margin-bottom: 1rem;
   }
 
   .services__button {
-  right: 2rem;
-  bottom: 2rem;
+    right: 2rem;
+    bottom: 2rem;
   }
 
   .projects__card {
@@ -1259,39 +1267,42 @@ img {
     border-radius: 2rem;
   }
 
-  .testimonials__container{
+  .testimonials__container {
     row-gap: 3rem;
   }
-}
+
+  /* FIX: testimonials pseudo-elements moved INSIDE 1150px media query */
   .testimonials__container::after,
   .testimonials__container::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  width: 20%;
-  height: 100%;
-}
+    content: '';
+    position: absolute;
+    top: 0;
+    width: 20%;
+    height: 100%;
+  }
 
-.testimonials__container::after {
-  left: 0;
-  background: linear-gradient(90deg,
-              hsl(0, 0%, 0%) 0%,
-              hsla(0, 0%, 0%, 0) 100%);
-}
+  .testimonials__container::after {
+    left: 0;
+    background: linear-gradient(90deg,
+                hsl(0, 0%, 0%) 0%,
+                hsla(0, 0%, 0%, 0) 100%);
+  }
 
-.testimonials__container::before {
-  right: 0;
-  z-index: 1;
-  background: linear-gradient(90deg,
-              hsla(0, 0%, 0%, 0) 0%,
-              hsl(0, 0%, 0%) 100%);
-}
-.testimonials__card {
-  width: 370px;
-  padding: 3rem 2rem;
-  border-radius: 4rem;
-}
+  .testimonials__container::before {
+    right: 0;
+    z-index: 1;
+    background: linear-gradient(90deg,
+                hsla(0, 0%, 0%, 0) 0%,
+                hsl(0, 0%, 0%) 100%);
+  }
 
-.testimonials__number {
-  font-size: var(--normal-font-size);
+  .testimonials__card {
+    width: 370px;
+    padding: 3rem 2rem;
+    border-radius: 4rem;
+  }
+
+  .testimonials__number {
+    font-size: var(--normal-font-size);
+  }
 }
