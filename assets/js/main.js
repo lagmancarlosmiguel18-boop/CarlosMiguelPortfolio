@@ -111,6 +111,8 @@ tracks.forEach(track => {
   }
 })
 
+
+
 /*=============== COPY EMAIL IN CONTACT ===============*/
 
 
@@ -127,3 +129,81 @@ tracks.forEach(track => {
 
 
 /*=============== SCROLL REVEAL ANIMATION ===============*/
+
+
+/*--=============== SKILL GLOBE JS ===============*/
+const globe = document.getElementById('skillGlobe')
+const skillIcons = globe.querySelectorAll('.skill-icon')
+const globeRadius = 130
+let rotX = 0
+let rotY = 0
+let isDragging = false
+let lastX, lastY
+
+const globePoints = []
+const total = skillIcons.length
+for (let i = 0; i < total; i++) {
+  const phi = Math.acos(-1 + (2 * i) / total)
+  const theta = Math.sqrt(total * Math.PI) * phi
+  globePoints.push({
+    x: globeRadius * Math.cos(theta) * Math.sin(phi),
+    y: globeRadius * Math.sin(theta) * Math.sin(phi),
+    z: globeRadius * Math.cos(phi)
+  })
+}
+
+function renderGlobe() {
+  skillIcons.forEach((icon, i) => {
+    const p = globePoints[i]
+    let x = p.x * Math.cos(rotY) - p.z * Math.sin(rotY)
+    let z = p.z * Math.cos(rotY) + p.x * Math.sin(rotY)
+    let y = p.y * Math.cos(rotX) - z * Math.sin(rotX)
+    z = z * Math.cos(rotX) + p.y * Math.sin(rotX)
+    const scale = (z + globeRadius) / (2 * globeRadius)
+    const opacity = Math.max(0.2, scale + 0.2)
+    icon.style.transform = `translateX(${x + 130}px) translateY(${y + 130}px) scale(${scale})`
+    icon.style.opacity = opacity
+    icon.style.zIndex = Math.round(z + globeRadius)
+  })
+}
+
+function animateGlobe() {
+  rotY += 0.005
+  renderGlobe()
+  requestAnimationFrame(animateGlobe)
+}
+
+animateGlobe()
+
+globe.addEventListener('mousedown', (e) => {
+  isDragging = true
+  lastX = e.clientX
+  lastY = e.clientY
+  globe.style.cursor = 'grabbing'
+})
+
+window.addEventListener('mouseup', () => {
+  isDragging = false
+  globe.style.cursor = 'grab'
+})
+
+window.addEventListener('mousemove', (e) => {
+  if (!isDragging) return
+  rotY += (e.clientX - lastX) * 0.005
+  rotX += (e.clientY - lastY) * 0.005
+  lastX = e.clientX
+  lastY = e.clientY
+})
+
+globe.addEventListener('touchstart', (e) => {
+  lastX = e.touches[0].clientX
+  lastY = e.touches[0].clientY
+})
+
+globe.addEventListener('touchmove', (e) => {
+  e.preventDefault()
+  rotY += (e.touches[0].clientX - lastX) * 0.005
+  rotX += (e.touches[0].clientY - lastY) * 0.005
+  lastX = e.touches[0].clientX
+  lastY = e.touches[0].clientY
+}, { passive: false })

@@ -891,6 +891,22 @@ img {
   }
 }
 
+.skill-icon {
+  position: absolute;
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgb(0, 0, 0);
+  font-size: 1.5rem;
+  text-align: center;
+  cursor: pointer;
+  user-select: none;
+  transition: filter 0.2s;
+}
+
 /*=============== CONTACT ===============*/
 
 
