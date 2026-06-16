@@ -114,36 +114,187 @@ tracks.forEach(track => {
 
 
 /*=============== COPY EMAIL IN CONTACT ===============*/
+const copyEmailBtn = document.getElementById('copy-email')
+const emailText    = document.getElementById('contact__email')
 
+if (copyEmailBtn && emailText) {
+  copyEmailBtn.addEventListener('click', () => {
+    navigator.clipboard.writeText(emailText.textContent.trim()).then(() => {
+      const icon = copyEmailBtn.querySelector('i')
+      icon.className = 'ri-check-line'
+      copyEmailBtn.textContent = 'Copied! '
+      copyEmailBtn.appendChild(icon)
 
-/*=============== CURRENT YEAR OF THE FOOTER ===============*/ 
+      setTimeout(() => {
+        icon.className = 'ri-clipboard-line'
+        copyEmailBtn.textContent = 'Copy Email '
+        copyEmailBtn.appendChild(icon)
+      }, 2000)
+    })
+  })
+}
 
+/*=============== CURRENT YEAR OF THE FOOTER ===============*/
+const yearEl = document.getElementById('current-year')
+if (yearEl) yearEl.textContent = new Date().getFullYear()
 
 /*=============== SCROLL SECTIONS ACTIVE LINK ===============*/
+const sections = document.querySelectorAll('section[id]')
 
+const scrollActive = () => {
+  const scrollDown = window.scrollY
+
+  sections.forEach(current => {
+    const sectionHeight = current.offsetHeight
+    const sectionTop    = current.offsetTop - 58
+    const sectionId     = current.getAttribute('id')
+    const navLink       = document.querySelector(`.nav__menu a[href*=${sectionId}]`)
+
+    if (scrollDown > sectionTop && scrollDown <= sectionTop + sectionHeight) {
+      navLink && navLink.classList.add('active-link')
+    } else {
+      navLink && navLink.classList.remove('active-link')
+    }
+  })
+}
+
+window.addEventListener('scroll', scrollActive)
 
 /*=============== CUSTOM CURSOR ===============*/
+const cursorDot     = document.getElementById('cursor-dot')
+const cursorOutline = document.getElementById('cursor-outline')
 
+// Only activate custom cursor on non-touch devices
+const isTouchDevice = () => window.matchMedia('(hover: none)').matches
 
-/* Hide custom cursor on links */
+if (!isTouchDevice() && cursorDot && cursorOutline) {
+  document.body.classList.add('cursor--active')
 
+  // Smooth outline following with lerp
+  let outlineX = 0, outlineY = 0
+  let targetX  = 0, targetY  = 0
+
+  window.addEventListener('mousemove', (e) => {
+    targetX = e.clientX
+    targetY = e.clientY
+
+    // Dot follows instantly
+    cursorDot.style.left = targetX + 'px'
+    cursorDot.style.top  = targetY + 'px'
+  })
+
+  // Smooth outline animation loop
+  const animateCursor = () => {
+    outlineX += (targetX - outlineX) * 0.12
+    outlineY += (targetY - outlineY) * 0.12
+
+    cursorOutline.style.left = outlineX + 'px'
+    cursorOutline.style.top  = outlineY + 'px'
+
+    requestAnimationFrame(animateCursor)
+  }
+  animateCursor()
+
+  // Hover effect on links and buttons
+  const hoverEls = document.querySelectorAll('a, button, .projects__card, .services__card, .skill-icon')
+
+  hoverEls.forEach(el => {
+    el.addEventListener('mouseenter', () => cursorOutline.classList.add('cursor--hover'))
+    el.addEventListener('mouseleave', () => cursorOutline.classList.remove('cursor--hover'))
+  })
+
+  // Click shrink effect
+  window.addEventListener('mousedown', () => cursorOutline.classList.add('cursor--click'))
+  window.addEventListener('mouseup',   () => cursorOutline.classList.remove('cursor--click'))
+
+  // Hide cursor when it leaves the window
+  document.addEventListener('mouseleave', () => {
+    cursorDot.style.opacity     = '0'
+    cursorOutline.style.opacity = '0'
+  })
+  document.addEventListener('mouseenter', () => {
+    cursorDot.style.opacity     = '1'
+    cursorOutline.style.opacity = '0.6'
+  })
+}
 
 /*=============== SCROLL REVEAL ANIMATION ===============*/
+const sr = ScrollReveal({
+  origin: 'top',
+  distance: '60px',
+  duration: 2500,
+  delay: 400,
+  reset: false,
+})
+
+// Home
+sr.reveal('.home__data',   { delay: 300 })
+sr.reveal('.home__image',  { delay: 500, origin: 'bottom' })
+sr.reveal('.home__social', { delay: 700, origin: 'left' })
+sr.reveal('.home__info',   { delay: 700, origin: 'right' })
+sr.reveal('.home__cv',     { delay: 800, origin: 'right' })
+
+// About
+sr.reveal('.about__data',  { origin: 'left' })
+sr.reveal('.about__image', { origin: 'right' })
+
+// Projects
+sr.reveal('.projects__swiper', { origin: 'bottom', delay: 300 })
+
+// Work
+sr.reveal('.work__tabs',    { origin: 'top' })
+sr.reveal('.work__content', { origin: 'bottom', delay: 200 })
+
+// Services
+sr.reveal('.services__card', { interval: 150, origin: 'bottom' })
+
+// Testimonials
+sr.reveal('.testimonials .section__title', { origin: 'left' })
+
+// Skills
+sr.reveal('.skills .section__title', { origin: 'top' })
+sr.reveal('.skills__globe-wrapper',  { origin: 'bottom', delay: 300 })
+
+// Contact
+sr.reveal('.contact__data',   { origin: 'left' })
+sr.reveal('.contact__form',   { origin: 'right', delay: 200 })
+
+// Footer
+sr.reveal('.footer__brand',  { origin: 'bottom', delay: 100 })
+sr.reveal('.footer__links',  { origin: 'bottom', delay: 200, interval: 150 })
 
 
 /*--=============== SKILL GLOBE JS ===============*/
 const globe = document.getElementById('skillGlobe')
 const skillIcons = globe.querySelectorAll('.skill-icon')
-const globeRadius = 130
-let rotX = 0
-let rotY = 0
+
+// Globe geometry constants
+const globeRadius = 130   // sphere radius
+const globeCenter = 160   // half of the 320px globe container (keeps icons centered)
+const iconHalf    = 30    // half of the 60px icon (so origin is icon centre)
+
+// Restore rotation state from sessionStorage so a refresh keeps the last angle
+let rotX = parseFloat(sessionStorage.getItem('globeRotX') || '0')
+let rotY = parseFloat(sessionStorage.getItem('globeRotY') || '0')
+
 let isDragging = false
 let lastX, lastY
+let saveTimer = null
 
+// Save state at most every 300 ms to avoid hammering sessionStorage
+function saveState() {
+  clearTimeout(saveTimer)
+  saveTimer = setTimeout(() => {
+    sessionStorage.setItem('globeRotX', rotX)
+    sessionStorage.setItem('globeRotY', rotY)
+  }, 300)
+}
+
+// Pre-compute evenly distributed sphere points (Fibonacci lattice)
 const globePoints = []
 const total = skillIcons.length
 for (let i = 0; i < total; i++) {
-  const phi = Math.acos(-1 + (2 * i) / total)
+  const phi   = Math.acos(-1 + (2 * i) / total)
   const theta = Math.sqrt(total * Math.PI) * phi
   globePoints.push({
     x: globeRadius * Math.cos(theta) * Math.sin(phi),
@@ -155,26 +306,36 @@ for (let i = 0; i < total; i++) {
 function renderGlobe() {
   skillIcons.forEach((icon, i) => {
     const p = globePoints[i]
+
+    // Rotate around Y axis
     let x = p.x * Math.cos(rotY) - p.z * Math.sin(rotY)
     let z = p.z * Math.cos(rotY) + p.x * Math.sin(rotY)
+
+    // Rotate around X axis
     let y = p.y * Math.cos(rotX) - z * Math.sin(rotX)
-    z = z * Math.cos(rotX) + p.y * Math.sin(rotX)
-    const scale = (z + globeRadius) / (2 * globeRadius)
-    const opacity = Math.max(0.2, scale + 0.2)
-    icon.style.transform = `translateX(${x + 130}px) translateY(${y + 130}px) scale(${scale})`
-    icon.style.opacity = opacity
-    icon.style.zIndex = Math.round(z + globeRadius)
+    z     = z   * Math.cos(rotX) + p.y * Math.sin(rotX)
+
+    // Depth cues — clamp scale so back icons stay readable (0.6 → 1.0)
+    const rawScale = (z + globeRadius) / (2 * globeRadius)
+    const scale    = 0.6 + rawScale * 0.4
+    const opacity  = 0.35 + rawScale * 0.65
+
+    // Offset so the icon CENTRE sits on the computed point
+    icon.style.transform = `translate(${x + globeCenter - iconHalf}px, ${y + globeCenter - iconHalf}px) scale(${scale})`
+    icon.style.opacity   = opacity
+    icon.style.zIndex    = Math.round(z + globeRadius)
   })
 }
 
 function animateGlobe() {
-  rotY += 0.005
+  if (!isDragging) rotY += 0.005
   renderGlobe()
   requestAnimationFrame(animateGlobe)
 }
 
 animateGlobe()
 
+// ── Mouse drag ──────────────────────────────────────────────
 globe.addEventListener('mousedown', (e) => {
   isDragging = true
   lastX = e.clientX
@@ -183,7 +344,7 @@ globe.addEventListener('mousedown', (e) => {
 })
 
 window.addEventListener('mouseup', () => {
-  isDragging = false
+  if (isDragging) { isDragging = false; saveState() }
   globe.style.cursor = 'grab'
 })
 
@@ -195,10 +356,11 @@ window.addEventListener('mousemove', (e) => {
   lastY = e.clientY
 })
 
+// ── Touch drag ───────────────────────────────────────────────
 globe.addEventListener('touchstart', (e) => {
   lastX = e.touches[0].clientX
   lastY = e.touches[0].clientY
-})
+}, { passive: true })
 
 globe.addEventListener('touchmove', (e) => {
   e.preventDefault()
@@ -207,3 +369,5 @@ globe.addEventListener('touchmove', (e) => {
   lastX = e.touches[0].clientX
   lastY = e.touches[0].clientY
 }, { passive: false })
+
+globe.addEventListener('touchend', saveState, { passive: true })

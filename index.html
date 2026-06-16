@@ -723,13 +723,130 @@
 
       <!--==================== CONTACT ====================-->
       <section class="contact section" id="contact">
+         <div class="contact__container container grid">
+            <div class="contact__data">
+               <h2 class="section__title">
+                  Get In <span>Touch</span>
+               </h2>
+               <p class="contact__description">
+                  Have a project in mind or want to collaborate? 
+                  I'd love to hear from you. Send me a message 
+                  and let's create something amazing together.
+               </p>
+
+               <div class="contact__info">
+                  <div class="contact__info-item">
+                     <i class="ri-map-pin-2-line"></i>
+                     <div>
+                        <h3 class="contact__info-title">Location</h3>
+                        <p class="contact__info-text">Angeles City, Pampanga, PH</p>
+                     </div>
+                  </div>
+                  <div class="contact__info-item">
+                     <i class="ri-mail-line"></i>
+                     <div>
+                        <h3 class="contact__info-title">Email</h3>
+                        <p class="contact__info-text" id="contact__email">lagmancarlosmiguel18@gmail.com</p>
+                     </div>
+                  </div>
+                  <div class="contact__info-item">
+                     <i class="ri-phone-line"></i>
+                     <div>
+                        <h3 class="contact__info-title">Phone</h3>
+                        <p class="contact__info-text">+63 9XX XXX XXXX</p>
+                     </div>
+                  </div>
+               </div>
+
+               <button class="contact__copy button" id="copy-email">
+                  Copy Email <i class="ri-clipboard-line"></i>
+               </button>
+            </div>
+
+            <div class="contact__form">
+               <div class="blob-animate contact__blob"></div>
+               <form class="contact__form-box" id="contact-form">
+                  <div class="contact__form-group">
+                     <label class="contact__form-label">Full Name</label>
+                     <input type="text" class="contact__form-input" placeholder="Carlos Miguel" required>
+                  </div>
+                  <div class="contact__form-group">
+                     <label class="contact__form-label">Email Address</label>
+                     <input type="email" class="contact__form-input" placeholder="your@email.com" required>
+                  </div>
+                  <div class="contact__form-group">
+                     <label class="contact__form-label">Subject</label>
+                     <input type="text" class="contact__form-input" placeholder="Project Collaboration" required>
+                  </div>
+                  <div class="contact__form-group">
+                     <label class="contact__form-label">Message</label>
+                     <textarea class="contact__form-input contact__form-textarea" placeholder="Tell me about your project..." rows="4" required></textarea>
+                  </div>
+                  <button type="submit" class="button contact__form-button">
+                     Send Message <i class="ri-send-plane-line"></i>
+                  </button>
+               </form>
+            </div>
+         </div>
       </section>
 
    </main>
 
    <!--==================== FOOTER ====================-->
-   <footer class="footer grid">
+   <footer class="footer">
+      <div class="footer__container container grid">
+         <div class="footer__brand">
+            <a href="#" class="footer__logo">CMJL</a>
+            <p class="footer__tagline">Creative Developer & Designer</p>
+            <div class="footer__socials">
+               <a href="https://www.linkedin.com/in/carlos-miguel-lagman-2558b6248/" target="_blank" class="footer__social-link">
+                  <i class="ri-linkedin-box-line"></i>
+               </a>
+               <a href="https://github.com/lagmancarlosmiguel18-boop" target="_blank" class="footer__social-link">
+                  <i class="ri-github-line"></i>
+               </a>
+               <a href="https://www.facebook.com/im.panda.senpai" target="_blank" class="footer__social-link">
+                  <i class="ri-facebook-circle-fill"></i>
+               </a>
+               <a href="https://gitlab.com/" target="_blank" class="footer__social-link">
+                  <i class="ri-gitlab-line"></i>
+               </a>
+            </div>
+         </div>
+
+         <div class="footer__links">
+            <h3 class="footer__title">Navigate</h3>
+            <ul class="footer__list">
+               <li><a href="#home" class="footer__link">Home</a></li>
+               <li><a href="#about" class="footer__link">About Me</a></li>
+               <li><a href="#projects" class="footer__link">Achievements</a></li>
+               <li><a href="#contact" class="footer__link">Contact</a></li>
+            </ul>
+         </div>
+
+         <div class="footer__links">
+            <h3 class="footer__title">Services</h3>
+            <ul class="footer__list">
+               <li><a href="#" class="footer__link">Web Development</a></li>
+               <li><a href="#" class="footer__link">UI/UX Design</a></li>
+               <li><a href="#" class="footer__link">Game Development</a></li>
+               <li><a href="#" class="footer__link">Graphic Design</a></li>
+            </ul>
+         </div>
+      </div>
+
+      <div class="footer__bottom container">
+         <p class="footer__copy">
+            &copy; <span id="current-year"></span> 
+            <span>Carlos Miguel Lagman</span>. All rights reserved.
+         </p>
+         <p class="footer__made">Made with <i class="ri-heart-fill"></i> & Code</p>
+      </div>
    </footer>
+
+   <!--==================== CUSTOM CURSOR ====================-->
+   <div class="cursor__dot" id="cursor-dot"></div>
+   <div class="cursor__outline" id="cursor-outline"></div>
 
    <!--=============== SCROLLREVEAL ===============-->
    <script src="assets/js/scrollreveal.min.js"></script>
