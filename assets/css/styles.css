@@ -294,9 +294,12 @@ img {
 .home__info {
   z-index: 2;
   bottom: -1rem;
-  justify-self: center;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 0;
+  right: 0;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .home__split {
@@ -310,6 +313,7 @@ img {
   font-size: var(--bigger-font-size);
   text-align: center;
   overflow: hidden;
+  width: 100%;
 }
 
 .home__profession-1 {
@@ -1409,6 +1413,10 @@ body.cursor--active button {
     right: 1rem;
     bottom: initial;
     left: initial;
+    right: 1rem;
+    display: block;
+    text-align: initial;
+    align-items: initial;
     transform: none;
   }
 
