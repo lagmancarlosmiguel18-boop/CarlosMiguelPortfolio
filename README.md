@@ -69,20 +69,24 @@ CMJL Portfolio
 ## Carlos Miguel  
 Lagman
 
+![image](https://cmjl.netlify.app/assets/img/about-perfil.png)
+
 ### Creative
 
 ## Developer
 
 ## & Designer
 
-Download CV
+[Download CV](https://cmjl.netlify.app/assets/pdf/Carlos-Miguel-Lagman-Resume.docx.pdf)
 
 ## Creativity  
 Is My Passion
 
 I'm a web **developer and designer** passionate about experimenting with new **skills and creativity.** Driven by learning and curiosity, I'm always looking to explore and learn new development and design skills.
 
-Resume
+[Resume](https://cmjl.netlify.app/assets/pdf/Carlos-Miguel-Lagman-Resume.docx.pdf)
+
+![](https://cmjl.netlify.app/assets/img/home-perfil.png)
 
 ## My Achievements in my  
 Academic Year
@@ -173,81 +177,121 @@ Web designer with Figma and Photoshop, creating motion designs with After Effect
 ## What They Say  
 About Me
 
+![image](https://cmjl.netlify.app/assets/img/testimonial-1.png)
+
 ## Jherzon Oligario
 
 Working with Carlos Miguel has been a game-changer for our project. Their technical proficiency in the IT sector is impressive, but it's their specific expertise in game development that truly stands out.
+
+![image](https://cmjl.netlify.app/assets/img/testimonial-2.png)
 
 ## Kelly John Noca
 
 Finding a developer who understands both the technical architecture of a system and the nuances of user engagement is rare. Carlos Miguel is exactly that professional.
 
+![image](https://cmjl.netlify.app/assets/img/testimonial-3.png)
+
 ## Justin Calma
 
 During our collaboration, they consistently turned abstract concepts into functional, high-performance reality. Their technical agility saved us countless hours of troubleshooting, making them an invaluable partner in any IT or software development venture.
 
+![image](https://cmjl.netlify.app/assets/img/testimonial-4.png)
+
 ## Micaella Mei Gutierrez
 
 What sets them apart is their holistic approach to development. They don't just build in isolation; they ensure that every system whether it's a database or a game engine works in perfect harmony with the rest of the stack.
+
+![image](https://cmjl.netlify.app/assets/img/testimonial-5.png)
 
 ## Alexandra Gutierrez
 
 Beyond just having a strong technical foundation, Carlos brings a level of logical precision to the table that is rare in the industry.
 
+![image](https://cmjl.netlify.app/assets/img/testimonial-1.png)
+
 ## Jherzon Oligario
 
 Working with Carlos Miguel has been a game-changer for our project. Their technical proficiency in the IT sector is impressive, but it's their specific expertise in game development that truly stands out.
+
+![image](https://cmjl.netlify.app/assets/img/testimonial-2.png)
 
 ## Kelly John Noca
 
 Finding a developer who understands both the technical architecture of a system and the nuances of user engagement is rare. Carlos Miguel is exactly that professional.
 
+![image](https://cmjl.netlify.app/assets/img/testimonial-3.png)
+
 ## Justin Calma
 
 During our collaboration, they consistently turned abstract concepts into functional, high-performance reality. Their technical agility saved us countless hours of troubleshooting, making them an invaluable partner in any IT or software development venture.
 
+![image](https://cmjl.netlify.app/assets/img/testimonial-4.png)
+
 ## Micaella Mei Gutierrez
 
 What sets them apart is their holistic approach to development. They don't just build in isolation; they ensure that every system whether it's a database or a game engine works in perfect harmony with the rest of the stack.
+
+![image](https://cmjl.netlify.app/assets/img/testimonial-5.png)
 
 ## Alexandra Gutierrez
 
 Beyond just having a strong technical foundation, Carlos brings a level of logical precision to the table that is rare in the industry.
 
+![image](https://cmjl.netlify.app/assets/img/testimonial-1.png)
+
 ## Jherzon Oligario
 
 Working with Carlos Miguel has been a game-changer for our project. Their technical proficiency in the IT sector is impressive, but it's their specific expertise in game development that truly stands out.
+
+![image](https://cmjl.netlify.app/assets/img/testimonial-2.png)
 
 ## Kelly John Noca
 
 Finding a developer who understands both the technical architecture of a system and the nuances of user engagement is rare. Carlos Miguel is exactly that professional.
 
+![image](https://cmjl.netlify.app/assets/img/testimonial-3.png)
+
 ## Justin Calma
 
 During our collaboration, they consistently turned abstract concepts into functional, high-performance reality. Their technical agility saved us countless hours of troubleshooting, making them an invaluable partner in any IT or software development venture.
 
+![image](https://cmjl.netlify.app/assets/img/testimonial-4.png)
+
 ## Micaella Mei Gutierrez
 
 What sets them apart is their holistic approach to development. They don't just build in isolation; they ensure that every system whether it's a database or a game engine works in perfect harmony with the rest of the stack.
+
+![image](https://cmjl.netlify.app/assets/img/testimonial-5.png)
 
 ## Alexandra Gutierrez
 
 Beyond just having a strong technical foundation, Carlos brings a level of logical precision to the table that is rare in the industry.
 
+![image](https://cmjl.netlify.app/assets/img/testimonial-1.png)
+
 ## Jherzon Oligario
 
 Working with Carlos Miguel has been a game-changer for our project. Their technical proficiency in the IT sector is impressive, but it's their specific expertise in game development that truly stands out.
+
+![image](https://cmjl.netlify.app/assets/img/testimonial-2.png)
 
 ## Kelly John Noca
 
 Finding a developer who understands both the technical architecture of a system and the nuances of user engagement is rare. Carlos Miguel is exactly that professional.
 
+![image](https://cmjl.netlify.app/assets/img/testimonial-3.png)
+
 ## Justin Calma
 
 During our collaboration, they consistently turned abstract concepts into functional, high-performance reality. Their technical agility saved us countless hours of troubleshooting, making them an invaluable partner in any IT or software development venture.
 
+![image](https://cmjl.netlify.app/assets/img/testimonial-4.png)
+
 ## Micaella Mei Gutierrez
 
 What sets them apart is their holistic approach to development. They don't just build in isolation; they ensure that every system whether it's a database or a game engine works in perfect harmony with the rest of the stack.
+
+![image](https://cmjl.netlify.app/assets/img/testimonial-5.png)
 
 ## Alexandra Gutierrez
 
