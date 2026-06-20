@@ -1,3 +1,82 @@
+/*=============== PRELOADER ===============*/
+;(() => {
+  const preloader = document.getElementById('preloader')
+  if (!preloader) return
+
+  const fillEl    = document.getElementById('preloader-fill')
+  const percentEl = document.getElementById('preloader-percent')
+  const statusEl  = document.getElementById('preloader-status')
+
+  document.body.classList.add('is-loading')
+
+  const statusMessages = [
+    { at: 0,   text: 'Loading Assets' },
+    { at: 30,  text: 'Rendering Magic' },
+    { at: 60,  text: 'Polishing Pixels' },
+    { at: 90,  text: 'Almost There' },
+    { at: 100, text: 'Welcome' },
+  ]
+
+  const minDuration = 1800   // ms — guarantees the intro animation is fully visible
+  const rampCap     = 92     // % the time-based ramp approaches while waiting for real load
+  const startTime   = performance.now()
+
+  let progress   = 0
+  let pageLoaded = false
+
+  const easeOutQuad = (t) => 1 - (1 - t) * (1 - t)
+
+  const setProgress = (value) => {
+    progress = Math.min(value, 100)
+    fillEl.style.width = progress + '%'
+    percentEl.textContent = Math.round(progress) + '%'
+
+    const current = statusMessages.filter((s) => progress >= s.at).pop()
+    if (current) statusEl.textContent = current.text
+  }
+
+  const hidePreloader = () => {
+    preloader.classList.add('preloader--hide')
+    document.body.classList.remove('is-loading')
+    setTimeout(() => { preloader.style.display = 'none' }, 700)
+  }
+
+  const finishProgress = () => {
+    const finishFrom = progress
+    const finishDuration = 350
+    const finishStart = performance.now()
+
+    const finishTick = (now) => {
+      const t = Math.min((now - finishStart) / finishDuration, 1)
+      setProgress(finishFrom + (100 - finishFrom) * easeOutQuad(t))
+      if (t < 1) requestAnimationFrame(finishTick)
+      else hidePreloader()
+    }
+    requestAnimationFrame(finishTick)
+  }
+
+  const tick = (now) => {
+    const elapsed = now - startTime
+    const t = Math.min(elapsed / minDuration, 1)
+    const ramped = easeOutQuad(t) * rampCap
+
+    if (progress < ramped) setProgress(ramped)
+
+    if (pageLoaded && elapsed >= minDuration) {
+      finishProgress()
+    } else {
+      requestAnimationFrame(tick)
+    }
+  }
+
+  window.addEventListener('load', () => { pageLoaded = true })
+
+  // Safety net: never let the preloader block the site for more than 8s
+  setTimeout(() => { pageLoaded = true }, 8000)
+
+  requestAnimationFrame(tick)
+})()
+
 /*=============== HOME SPLIT TEXT ===============*/
 const { animate, text, stagger } = anime
 

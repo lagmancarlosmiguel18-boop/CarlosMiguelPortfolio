@@ -78,6 +78,32 @@
    </style>
 </head>
 <body>
+   <!--==================== PRELOADER ====================-->
+   <div class="preloader" id="preloader" aria-hidden="true">
+      <div class="preloader__center">
+         <div class="preloader__glow blob-animate"></div>
+         <div class="preloader__orbit">
+            <span class="preloader__dot"></span>
+         </div>
+         <div class="preloader__logo">
+            <span class="preloader__letter">C</span>
+            <span class="preloader__letter">M</span>
+            <span class="preloader__letter">J</span>
+            <span class="preloader__letter">L</span>
+         </div>
+      </div>
+
+      <div class="preloader__bar">
+         <span class="preloader__bar-fill" id="preloader-fill"></span>
+      </div>
+
+      <div class="preloader__meta">
+         <span class="preloader__status" id="preloader-status">Loading Assets</span>
+         <span class="preloader__percent" id="preloader-percent">0%</span>
+      </div>
+   </div>
+   <noscript><style>#preloader{display:none !important}</style></noscript>
+
    <!--==================== HEADER ====================-->
    <header class="header" id="header">
       <div class="blob-animate"></div>
