@@ -82,7 +82,7 @@
 const EMAILJS_PUBLIC_KEY          = 'YtKnGwKJ4n1dvhh92'  // Account → API Keys
 const EMAILJS_SERVICE_ID          = 'service_fq827eo'     // Email Services
 const EMAILJS_VISITOR_TEMPLATE_ID = 'template_8p79iob'    // visitor alert template
-const EMAILJS_CONTACT_TEMPLATE_ID = 'd15vl3s'             // contact form template
+const EMAILJS_CONTACT_TEMPLATE_ID = 'template_8p79iob'    // contact form template
 // ──────────────────────────────────────────────────────────────────────────────
 
 emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY })
