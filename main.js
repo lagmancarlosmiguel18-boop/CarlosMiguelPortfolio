@@ -132,7 +132,7 @@ emailjs.init({ publicKey: 'YtKnGwKJ4n1dvhh92' })
 
     // ── Send via EmailJS ───────────────────────────────────────────────────────
     // Step 2: Replace YOUR_SERVICE_ID and YOUR_TEMPLATE_ID below
-    await emailjs.send('service_fq827eo', 'template_eosj4rj', {
+    await emailjs.send('service_fq827eo', 'h9b1g0k', {
       visit_time : visitTime,
       page_url   : location.href,
       referrer,
@@ -344,7 +344,7 @@ if (contactForm) {
 
     try {
       // Replace YOUR_SERVICE_ID and YOUR_CONTACT_TEMPLATE_ID below
-      await emailjs.send('YOUR_SERVICE_ID', 'YOUR_CONTACT_TEMPLATE_ID', {
+      await emailjs.send('service_fq827eo', 'h9b1g0k', {
         from_name  : nameEl.value.trim(),
         from_email : emailEl.value.trim(),
         subject    : subjectEl.value.trim(),
