@@ -77,9 +77,17 @@
   requestAnimationFrame(tick)
 })()
 
+/*=============== EMAILJS INIT ===============*/
+// ─── REPLACE these 3 values with your real IDs from emailjs.com ───────────────
+const EMAILJS_PUBLIC_KEY          = 'YtKnGwKJ4n1dvhh92'  // Account → API Keys
+const EMAILJS_SERVICE_ID          = 'service_fq827eo'     // Email Services
+const EMAILJS_VISITOR_TEMPLATE_ID = 'template_8p79iob'    // visitor alert template
+const EMAILJS_CONTACT_TEMPLATE_ID = 'd15vl3s'             // contact form template
+// ──────────────────────────────────────────────────────────────────────────────
+
+emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY })
+
 /*=============== VISITOR NOTIFICATION ===============*/
-// ─── Step 1: Paste your Public Key from emailjs.com/account/api-keys ──────────
-emailjs.init({ publicKey: 'YtKnGwKJ4n1dvhh92' })
 
 ;(() => {
   // Fire once per browser session only — prevents inbox spam on page refreshes
@@ -131,8 +139,7 @@ emailjs.init({ publicKey: 'YtKnGwKJ4n1dvhh92' })
       : 'Direct / Typed URL'
 
     // ── Send via EmailJS ───────────────────────────────────────────────────────
-    // Step 2: Replace YOUR_SERVICE_ID and YOUR_TEMPLATE_ID below
-    await emailjs.send('service_gepra8b', 'template_eosj4rj', {
+    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_VISITOR_TEMPLATE_ID, {
       visit_time : visitTime,
       page_url   : location.href,
       referrer,
@@ -343,14 +350,14 @@ if (contactForm) {
     })
 
     try {
-      // Replace YOUR_SERVICE_ID and YOUR_CONTACT_TEMPLATE_ID below
-      await emailjs.send('service_gepra8b', 'template_eosj4rj', {
+      const result = await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_CONTACT_TEMPLATE_ID, {
         from_name  : nameEl.value.trim(),
         from_email : emailEl.value.trim(),
         subject    : subjectEl.value.trim(),
         message    : msgEl.value.trim(),
         sent_time  : sentTime,
       })
+      console.log('EmailJS success:', result)
 
       // ── Success state ──────────────────────────────────────────────────────
       setStatus('success', 'checkbox-circle-line', 'Message sent! I\'ll get back to you soon 🎉')
@@ -364,9 +371,11 @@ if (contactForm) {
         setTimeout(resetStatus, 300)
       }, 3000)
 
-    } catch {
+    } catch (err) {
       // ── Error state ────────────────────────────────────────────────────────
-      setStatus('error', 'error-warning-line', 'Something went wrong. Try emailing me directly at lagmancarlosmiguel18@gmail.com')
+      console.error('EmailJS error:', err)
+      const errMsg = err?.text || err?.message || JSON.stringify(err)
+      setStatus('error', 'error-warning-line', `Failed to send (${errMsg}). Email me directly at lagmancarlosmiguel18@gmail.com`)
       contactSubmit.disabled   = false
       contactBtnIcon.className = 'ri-send-plane-line'
     }
