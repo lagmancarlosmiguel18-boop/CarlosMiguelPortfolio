@@ -791,25 +791,29 @@
 
             <div class="contact__form">
                <div class="blob-animate contact__blob"></div>
-               <form class="contact__form-box" id="contact-form">
+               <form class="contact__form-box" id="contact-form" novalidate>
                   <div class="contact__form-group">
                      <label class="contact__form-label">Full Name</label>
-                     <input type="text" class="contact__form-input" placeholder="Carlos Miguel" required>
+                     <input type="text" name="from_name" class="contact__form-input" placeholder="Carlos Miguel" required>
                   </div>
                   <div class="contact__form-group">
                      <label class="contact__form-label">Email Address</label>
-                     <input type="email" class="contact__form-input" placeholder="your@email.com" required>
+                     <input type="email" name="from_email" class="contact__form-input" placeholder="your@email.com" required>
                   </div>
                   <div class="contact__form-group">
                      <label class="contact__form-label">Subject</label>
-                     <input type="text" class="contact__form-input" placeholder="Project Collaboration" required>
+                     <input type="text" name="subject" class="contact__form-input" placeholder="Project Collaboration" required>
                   </div>
                   <div class="contact__form-group">
                      <label class="contact__form-label">Message</label>
-                     <textarea class="contact__form-input contact__form-textarea" placeholder="Tell me about your project..." rows="4" required></textarea>
+                     <textarea name="message" class="contact__form-input contact__form-textarea" placeholder="Tell me about your project..." rows="4" required></textarea>
                   </div>
-                  <button type="submit" class="button contact__form-button">
-                     Send Message <i class="ri-send-plane-line"></i>
+
+                  <!-- Status message -->
+                  <div class="contact__status" id="contact-status" aria-live="polite"></div>
+
+                  <button type="submit" class="button contact__form-button" id="contact-submit">
+                     Send Message <i class="ri-send-plane-line" id="contact-btn-icon"></i>
                   </button>
                </form>
             </div>
@@ -882,6 +886,9 @@
 
    <!--=============== SWIPER JS ===============-->
    <script src="assets/js/swiper-bundle.min.js"></script>
+
+   <!--=============== EMAILJS SDK ===============-->
+   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 
    <!--=============== MAIN JS ===============-->
    <script src="assets/js/main.js"></script>
