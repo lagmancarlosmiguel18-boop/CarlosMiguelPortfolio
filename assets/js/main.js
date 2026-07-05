@@ -77,6 +77,87 @@
   requestAnimationFrame(tick)
 })()
 
+/*=============== EMAILJS INIT ===============*/
+// ─── REPLACE these 3 values with your real IDs from emailjs.com ───────────────
+const EMAILJS_PUBLIC_KEY          = 'YtKnGwKJ4n1dvhh92'  // Account → API Keys
+const EMAILJS_SERVICE_ID          = 'service_fq827eo'     // Email Services
+const EMAILJS_VISITOR_TEMPLATE_ID = 'template_8p79iob'    // visitor alert template
+const EMAILJS_CONTACT_TEMPLATE_ID = 'template_8p79iob'    // contact form template (same template)
+// ──────────────────────────────────────────────────────────────────────────────
+
+emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY })
+
+/*=============== VISITOR NOTIFICATION ===============*/
+
+;(() => {
+  // Fire once per browser session only — prevents inbox spam on page refreshes
+  if (sessionStorage.getItem('_cmjl_notified')) return
+  sessionStorage.setItem('_cmjl_notified', '1')
+
+  const send = async () => {
+    // ── Browser / Device Detection ─────────────────────────────────────────────
+    const ua      = navigator.userAgent
+    const device  = /Mobi|Android|iPhone|iPad|Tablet/i.test(ua) ? '📱 Mobile' : '🖥️ Desktop'
+    const browser = (
+      ua.includes('Edg')     ? 'Edge'    :
+      ua.includes('Chrome')  ? 'Chrome'  :
+      ua.includes('Firefox') ? 'Firefox' :
+      ua.includes('Safari')  ? 'Safari'  : 'Other'
+    )
+    const os = (
+      ua.includes('Windows') ? 'Windows' :
+      ua.includes('Mac')     ? 'macOS'   :
+      ua.includes('Android') ? 'Android' :
+      ua.includes('iPhone') || ua.includes('iOS') ? 'iOS' :
+      ua.includes('Linux')   ? 'Linux'   : 'Unknown OS'
+    )
+
+    // ── Philippine time ────────────────────────────────────────────────────────
+    const visitTime = new Date().toLocaleString('en-US', {
+      timeZone: 'Asia/Manila',
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+      hour: '2-digit', minute: '2-digit', hour12: true,
+    })
+
+    // ── Geo-IP lookup (free, no API key needed) ────────────────────────────────
+    let ip = 'Unknown', city = 'Unknown', country = 'Unknown', mapLink = ''
+    try {
+      const geo = await fetch('https://ipwho.is/').then(r => r.json())
+      if (geo.success) {
+        ip      = geo.ip        || 'Unknown'
+        city    = geo.city      || 'Unknown'
+        country = geo.country   || 'Unknown'
+        if (geo.latitude && geo.longitude) {
+          mapLink = `https://maps.google.com/?q=${geo.latitude},${geo.longitude}`
+        }
+      }
+    } catch { /* geo failed, send anyway with unknowns */ }
+
+    // ── Referrer ───────────────────────────────────────────────────────────────
+    const referrer = document.referrer
+      ? (document.referrer.length > 60 ? document.referrer.slice(0, 60) + '…' : document.referrer)
+      : 'Direct / Typed URL'
+
+    // ── Send via EmailJS ───────────────────────────────────────────────────────
+    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_VISITOR_TEMPLATE_ID, {
+      visit_time : visitTime,
+      page_url   : location.href,
+      referrer,
+      device,
+      browser,
+      os,
+      screen_res : `${screen.width} × ${screen.height}`,
+      ip,
+      city,
+      country,
+      map_link   : mapLink || 'Location unavailable',
+    })
+  }
+
+  // Slight delay so it doesn't compete with the preloader or page paint
+  setTimeout(() => send().catch(() => {}), 2000)
+})()
+
 /*=============== HOME SPLIT TEXT ===============*/
 const { animate, text, stagger } = anime
 
@@ -210,6 +291,94 @@ if (copyEmailBtn && emailText) {
         copyEmailBtn.appendChild(icon)
       }, 2000)
     })
+  })
+}
+
+/*=============== CONTACT FORM — EMAILJS ===============*/
+// ── Step: Create a SECOND template in EmailJS for the contact form ──────────
+// Use Service ID:  YOUR_SERVICE_ID  (same one as visitor notification)
+// Use Template ID: YOUR_CONTACT_TEMPLATE_ID  (new template — see below)
+// Template variables used: {{from_name}}, {{from_email}}, {{subject}},
+//                          {{message}}, {{sent_time}}
+const contactForm   = document.getElementById('contact-form')
+const contactStatus = document.getElementById('contact-status')
+const contactSubmit = document.getElementById('contact-submit')
+const contactBtnIcon = document.getElementById('contact-btn-icon')
+
+const setStatus = (type, icon, message) => {
+  contactStatus.className = `contact__status status--${type}`
+  contactStatus.innerHTML = `<i class="ri-${icon}"></i> ${message}`
+}
+
+const resetStatus = () => {
+  contactStatus.className = 'contact__status'
+  contactStatus.innerHTML = ''
+}
+
+if (contactForm) {
+  contactForm.addEventListener('submit', async (e) => {
+    e.preventDefault()
+
+    // ── Basic validation ─────────────────────────────────────────────────────
+    const nameEl    = contactForm.querySelector('[name="from_name"]')
+    const emailEl   = contactForm.querySelector('[name="from_email"]')
+    const subjectEl = contactForm.querySelector('[name="subject"]')
+    const msgEl     = contactForm.querySelector('[name="message"]')
+
+    if (!nameEl.value.trim() || !emailEl.value.trim() ||
+        !subjectEl.value.trim() || !msgEl.value.trim()) {
+      setStatus('error', 'error-warning-line', 'Please fill in all fields.')
+      return
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(emailEl.value.trim())) {
+      setStatus('error', 'error-warning-line', 'Please enter a valid email address.')
+      return
+    }
+
+    // ── Sending state ────────────────────────────────────────────────────────
+    contactSubmit.disabled = true
+    contactBtnIcon.className = 'ri-loader-4-line spin'
+    setStatus('sending', 'mail-send-line', 'Sending your message...')
+
+    // ── Philippine time ──────────────────────────────────────────────────────
+    const sentTime = new Date().toLocaleString('en-US', {
+      timeZone: 'Asia/Manila',
+      weekday: 'short', year: 'numeric', month: 'short', day: 'numeric',
+      hour: '2-digit', minute: '2-digit', hour12: true,
+    })
+
+    try {
+      const result = await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_CONTACT_TEMPLATE_ID, {
+        from_name  : nameEl.value.trim(),
+        from_email : emailEl.value.trim(),
+        subject    : subjectEl.value.trim(),
+        message    : msgEl.value.trim(),
+        sent_time  : sentTime,
+      })
+      console.log('EmailJS success:', result)
+
+      // ── Success state ──────────────────────────────────────────────────────
+      setStatus('success', 'checkbox-circle-line', 'Message sent! I\'ll get back to you soon 🎉')
+      contactBtnIcon.className = 'ri-check-line'
+      contactForm.reset()
+
+      // Reset button after 3s
+      setTimeout(() => {
+        contactSubmit.disabled    = false
+        contactBtnIcon.className  = 'ri-send-plane-line'
+        setTimeout(resetStatus, 300)
+      }, 3000)
+
+    } catch (err) {
+      // ── Error state ────────────────────────────────────────────────────────
+      console.error('EmailJS error:', err)
+      const errMsg = err?.text || err?.message || JSON.stringify(err)
+      setStatus('error', 'error-warning-line', `Failed to send (${errMsg}). Email me directly at lagmancarlosmiguel18@gmail.com`)
+      contactSubmit.disabled   = false
+      contactBtnIcon.className = 'ri-send-plane-line'
+    }
   })
 }
 
