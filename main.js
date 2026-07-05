@@ -79,10 +79,10 @@
 
 /*=============== EMAILJS INIT ===============*/
 // ─── REPLACE these 3 values with your real IDs from emailjs.com ───────────────
-const EMAILJS_PUBLIC_KEY          = 'YtKnGwKJ4n1dvhh92'  // Account → API Keys
-const EMAILJS_SERVICE_ID          = 'service_fq827eo'     // Email Services
-const EMAILJS_VISITOR_TEMPLATE_ID = 'template_8p79iob'    // visitor alert template
-const EMAILJS_CONTACT_TEMPLATE_ID = 'template_8p79iob'    // contact form template (same template)
+const EMAILJS_PUBLIC_KEY          = 'YtKnGwKJ4n1dvhh92'
+const EMAILJS_SERVICE_ID          = 'service_fq827eo'
+const EMAILJS_VISITOR_TEMPLATE_ID = 'template_8p79iob'
+const EMAILJS_CONTACT_TEMPLATE_ID = 'template_8p79iob'
 // ──────────────────────────────────────────────────────────────────────────────
 
 emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY })
