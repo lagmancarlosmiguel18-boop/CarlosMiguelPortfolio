@@ -296,6 +296,25 @@
         </div>
       </div>
 
+      <!-- SEED BANNER -->
+      <div id="seed-banner" style="display:none;align-items:flex-start;gap:1rem;
+           background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.25);
+           border-radius:12px;padding:1rem 1.25rem;margin-bottom:1.5rem;flex-wrap:wrap;">
+        <div style="flex:1;min-width:200px;">
+          <div style="font-weight:700;color:#fff;margin-bottom:.25rem;">
+            <i class="ri-database-2-line" style="color:var(--accent-lt)"></i>
+            Firestore is empty
+          </div>
+          <div style="font-size:.8rem;color:var(--muted);line-height:1.6;">
+            Import your existing portfolio content (achievements, work & education)
+            into Firestore as a starting point. You can edit everything after.
+          </div>
+        </div>
+        <button class="btn btn-primary" id="seed-btn" onclick="seedExistingData()" style="white-space:nowrap">
+          <i class="ri-download-line"></i> Import Existing Data
+        </button>
+      </div>
+
       <!-- ACHIEVEMENTS PANEL -->
       <div class="section-panel active" id="panel-achievements">
         <div class="sec-header">
@@ -455,6 +474,7 @@ function toast(msg, type = 'success') {
 // ══════════════════════════════════════════════════════════
 async function loadAll() {
   await Promise.all([loadAchievements(), loadWork(), updateStats()])
+  checkAndShowSeedBanner()
 }
 
 async function updateStats() {
@@ -808,6 +828,69 @@ async function uploadImage(file) {
 
   progressBar.style.width = '100%'
   return data.secure_url
+}
+
+// ══════════════════════════════════════════════════════════
+//  EXISTING PORTFOLIO DATA — seeded into Firestore once
+// ══════════════════════════════════════════════════════════
+const SEED_WORK = [
+  { tab: 'experience', order: 1, title: 'Graphic Designer',       subtitle: 'Freelancer',             year: '2019',      description: 'Tools I used on making portfolio and projects are Photoshop and Canva, soon to learn Figma.' },
+  { tab: 'experience', order: 2, title: 'Kitchen Crew',           subtitle: 'Going to Samgy',          year: '2022',      description: 'Kitchen Crew, knows how to cook Korean and Filipino foods.' },
+  { tab: 'experience', order: 3, title: 'Kitchen Crew',           subtitle: 'Jollibee Food Corp.',     year: '2023',      description: 'Kitchen Crew, knows how to handle burger steak and fry some foods.' },
+  { tab: 'education',  order: 1, title: 'Jalung Elementary School',   subtitle: 'Primary Education',   year: '2012',      description: 'During my primary education, I completed the standard curriculum provided by my school, which helped build my foundational knowledge and skills.' },
+  { tab: 'education',  order: 2, title: 'Porac National High School', subtitle: 'Secondary Education', year: '2023',      description: 'During my K-12 education, I pursued the TVL Home Economics track as it was the only available option at the time, although it is not directly related to my intended field in Information Technology.' },
+  { tab: 'education',  order: 3, title: 'Guagua National Colleges INC.', subtitle: 'Higher Education', year: 'Currently', description: "On the development side, I've mastered the core of the web using HTML and CSS to build intuitive user interfaces, while leveraging Java and Python to handle complex backend logic and data processing. My background in Networking ensures that I understand the infrastructure that keeps these systems secure and connected." },
+]
+
+const SEED_ACHIEVEMENTS = [
+  { order: 1, category: 'Web Development',  title: 'Certiport\nPython',  subtitle: 'Program Language used',     language: 'Python',        imageUrl: '', link: 'https://www.credly.com/users/carlos-miguel-lagman/badges#credly' },
+  { order: 2, category: 'IT Essentials',    title: 'Cisco\nTechnician',  subtitle: 'Fundamentals of Computer',  language: 'Troubleshooting', imageUrl: '', link: 'https://www.credly.com/users/carlos-miguel-lagman/badges#credly' },
+  { order: 3, category: 'IT Essentials',    title: 'Cisco\nPython',      subtitle: 'Program Language used',     language: 'Python',        imageUrl: '', link: 'https://www.credly.com/users/carlos-miguel-lagman/badges#credly' },
+  { order: 4, category: 'Python Essentials',title: 'Cisco\nPython',      subtitle: 'Program Language used',     language: 'Python',        imageUrl: '', link: 'https://www.credly.com/users/carlos-miguel-lagman/badges#credly' },
+  { order: 5, category: 'Game Developer',   title: 'SunnyLand\nUnity',   subtitle: 'Program Language used',     language: 'CSharp',        imageUrl: '', link: 'https://drive.google.com/file/d/1SnLagwaf_jGnmj9u39hnyFQjAM4D1RHP/view' },
+]
+
+async function seedExistingData() {
+  const btn = document.getElementById('seed-btn')
+  btn.disabled = true
+  btn.innerHTML = '<span class="spinner"></span> Importing...'
+
+  try {
+    const batch = db.batch()
+
+    // Seed work items
+    SEED_WORK.forEach(item => {
+      const ref = db.collection('work').doc()
+      batch.set(ref, { ...item, createdAt: firebase.firestore.FieldValue.serverTimestamp() })
+    })
+
+    // Seed achievements
+    SEED_ACHIEVEMENTS.forEach(item => {
+      const ref = db.collection('achievements').doc()
+      batch.set(ref, { ...item, createdAt: firebase.firestore.FieldValue.serverTimestamp() })
+    })
+
+    await batch.commit()
+
+    document.getElementById('seed-banner').style.display = 'none'
+    toast('All existing data imported successfully! 🎉')
+    loadAll()
+  } catch(e) {
+    toast('Import failed: ' + e.message, 'error')
+    btn.disabled = false
+    btn.innerHTML = '<i class="ri-download-line"></i> Import Existing Data'
+  }
+}
+
+// Check on load if Firestore is empty → show seed banner
+async function checkAndShowSeedBanner() {
+  const [acSnap, wkSnap] = await Promise.all([
+    db.collection('achievements').limit(1).get(),
+    db.collection('work').limit(1).get()
+  ])
+  if (acSnap.empty && wkSnap.empty) {
+    document.getElementById('seed-banner').style.display = 'flex'
+  }
 }
 </script>
 </body>
