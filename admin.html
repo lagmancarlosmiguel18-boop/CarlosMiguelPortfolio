@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CMJL Admin Panel</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css">
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #06060f;
+      --surface:   #0e0e1f;
+      --surface-2: #16162a;
+      --border:    rgba(130,90,255,.18);
+      --accent:    #7c3aed;
+      --accent-lt: #a78bfa;
+      --danger:    #ef4444;
+      --success:   #22c55e;
+      --text:      #e2e2f0;
+      --muted:     #6b6b8a;
+      --radius:    12px;
+      --font:      'Segoe UI', system-ui, sans-serif;
+    }
+
+    body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; }
+
+    /* ─── LOGIN ─────────────────────────────────────────────── */
+    #login-screen {
+      min-height: 100vh; display: flex; align-items: center;
+      justify-content: center;
+      background: radial-gradient(ellipse at 50% 0%, rgba(124,58,237,.25) 0%, transparent 65%);
+    }
+    .login-box {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 20px; padding: 2.5rem 2rem; width: 100%; max-width: 380px;
+      box-shadow: 0 0 60px rgba(124,58,237,.12);
+    }
+    .login-logo { text-align: center; font-size: 2rem; font-weight: 800;
+      letter-spacing: 6px; color: #fff; margin-bottom: .25rem; }
+    .login-sub { text-align: center; font-size: .75rem; color: var(--accent-lt);
+      letter-spacing: 3px; text-transform: uppercase; margin-bottom: 2rem; }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; font-size: .75rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: .4rem; }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%; background: var(--bg); border: 1.5px solid var(--border);
+      border-radius: 8px; padding: .7rem 1rem; color: var(--text);
+      font-family: var(--font); font-size: .9rem; outline: none; transition: border-color .25s;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      border-color: var(--accent);
+    }
+    .form-group textarea { resize: vertical; min-height: 80px; }
+    .form-group select option { background: var(--surface); }
+    .btn { display: inline-flex; align-items: center; gap: .4rem; padding: .65rem 1.25rem;
+      border-radius: 8px; font-size: .85rem; font-weight: 600; cursor: pointer;
+      border: none; transition: opacity .2s, transform .15s; }
+    .btn:active { transform: scale(.97); }
+    .btn-primary { background: var(--accent); color: #fff; width: 100%; justify-content: center; margin-top: .5rem; }
+    .btn-primary:hover { opacity: .85; }
+    .btn-sm { padding: .4rem .85rem; font-size: .78rem; }
+    .btn-ghost { background: var(--surface-2); color: var(--text); border: 1px solid var(--border); }
+    .btn-ghost:hover { border-color: var(--accent-lt); color: var(--accent-lt); }
+    .btn-danger { background: rgba(239,68,68,.12); color: var(--danger); border: 1px solid rgba(239,68,68,.25); }
+    .btn-danger:hover { background: rgba(239,68,68,.2); }
+    .btn-success { background: rgba(34,197,94,.12); color: var(--success); border: 1px solid rgba(34,197,94,.25); }
+    .btn-success:hover { background: rgba(34,197,94,.2); }
+    #login-error { color: var(--danger); font-size: .8rem; text-align: center; margin-top: .75rem; display: none; }
+
+    /* ─── LAYOUT ─────────────────────────────────────────────── */
+    #dashboard { display: none; min-height: 100vh; }
+    .layout { display: flex; min-height: 100vh; }
+
+    /* ─── SIDEBAR ────────────────────────────────────────────── */
+    .sidebar {
+      width: 220px; min-width: 220px; background: var(--surface);
+      border-right: 1px solid var(--border); display: flex;
+      flex-direction: column; padding: 1.5rem 1rem;
+      position: sticky; top: 0; height: 100vh;
+    }
+    .sidebar-logo { font-size: 1.4rem; font-weight: 800; letter-spacing: 4px;
+      color: #fff; text-align: center; margin-bottom: .25rem; }
+    .sidebar-sub { font-size: .65rem; color: var(--muted); text-align: center;
+      letter-spacing: 2px; text-transform: uppercase; margin-bottom: 2rem;
+      padding-bottom: 1.25rem; border-bottom: 1px solid var(--border); }
+    .nav-label { font-size: .65rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 2px; color: var(--muted); margin-bottom: .5rem; margin-top: 1rem; padding-left: .5rem; }
+    .nav-item { display: flex; align-items: center; gap: .6rem; padding: .6rem .75rem;
+      border-radius: 8px; cursor: pointer; color: var(--muted); font-size: .875rem;
+      font-weight: 500; transition: background .2s, color .2s; margin-bottom: .1rem; border: none;
+      background: none; width: 100%; text-align: left; }
+    .nav-item:hover { background: var(--surface-2); color: var(--text); }
+    .nav-item.active { background: rgba(124,58,237,.15); color: var(--accent-lt);
+      border: 1px solid rgba(124,58,237,.25); }
+    .nav-item i { font-size: 1.1rem; }
+    .sidebar-spacer { flex: 1; }
+    .sidebar-user { border-top: 1px solid var(--border); padding-top: 1rem; }
+    .user-email { font-size: .72rem; color: var(--muted); margin-bottom: .6rem;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    /* ─── MAIN ───────────────────────────────────────────────── */
+    .main { flex: 1; padding: 2rem; overflow-y: auto; }
+    .main-header { display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 1.75rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
+    .main-title { font-size: 1.35rem; font-weight: 700; color: #fff; }
+    .main-title span { color: var(--accent-lt); }
+    .section-panel { display: none; }
+    .section-panel.active { display: block; }
+
+    /* ─── STATS ROW ──────────────────────────────────────────── */
+    .stats-row { display: flex; gap: 1rem; margin-bottom: 1.75rem; flex-wrap: wrap; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1rem 1.25rem; flex: 1; min-width: 120px; }
+    .stat-value { font-size: 1.75rem; font-weight: 800; color: var(--accent-lt); line-height: 1; }
+    .stat-label { font-size: .72rem; color: var(--muted); margin-top: .25rem; text-transform: uppercase; letter-spacing: 1px; }
+
+    /* ─── SECTION HEADER ─────────────────────────────────────── */
+    .sec-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
+    .sec-title { font-size: 1rem; font-weight: 700; color: #fff; }
+    .tab-row { display: flex; gap: .5rem; margin-bottom: 1.25rem; flex-wrap: wrap; }
+    .tab-btn { padding: .45rem 1rem; border-radius: 6px; border: 1px solid var(--border);
+      background: none; color: var(--muted); font-size: .8rem; font-weight: 600;
+      cursor: pointer; transition: all .2s; }
+    .tab-btn.active { background: rgba(124,58,237,.15); color: var(--accent-lt); border-color: rgba(124,58,237,.3); }
+
+    /* ─── ACHIEVEMENT GRID ───────────────────────────────────── */
+    .achievement-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; }
+    .ac-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      overflow: hidden; transition: border-color .2s; }
+    .ac-card:hover { border-color: rgba(124,58,237,.4); }
+    .ac-card-img { width: 100%; height: 140px; object-fit: cover; background: var(--surface-2);
+      display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: .8rem; }
+    .ac-card-img img { width: 100%; height: 140px; object-fit: cover; display: block; }
+    .ac-card-body { padding: .9rem; }
+    .ac-card-num { font-size: .65rem; font-weight: 700; letter-spacing: 2px; color: var(--accent-lt);
+      text-transform: uppercase; margin-bottom: .2rem; }
+    .ac-card-title { font-size: .95rem; font-weight: 700; color: #fff; margin-bottom: .15rem; }
+    .ac-card-cat { font-size: .75rem; color: var(--muted); margin-bottom: .75rem; }
+    .ac-card-actions { display: flex; gap: .5rem; }
+
+    /* ─── WORK LIST ──────────────────────────────────────────── */
+    .work-list { display: flex; flex-direction: column; gap: .75rem; }
+    .wk-item { background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1rem 1.25rem;
+      display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+    .wk-item:hover { border-color: rgba(124,58,237,.3); }
+    .wk-info { flex: 1; }
+    .wk-title { font-size: .95rem; font-weight: 700; color: #fff; }
+    .wk-sub { font-size: .78rem; color: var(--accent-lt); margin-bottom: .3rem; }
+    .wk-desc { font-size: .78rem; color: var(--muted); line-height: 1.5; }
+    .wk-year { font-size: .72rem; background: var(--surface-2); border: 1px solid var(--border);
+      border-radius: 4px; padding: .2rem .5rem; color: var(--muted); white-space: nowrap; margin-bottom: .5rem; }
+    .wk-actions { display: flex; flex-direction: column; gap: .4rem; }
+
+    /* ─── MODAL ──────────────────────────────────────────────── */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.75);
+      z-index: 1000; display: none; align-items: center; justify-content: center;
+      padding: 1rem; backdrop-filter: blur(4px); }
+    .modal-overlay.open { display: flex; }
+    .modal-box { background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; width: 100%; max-width: 520px;
+      max-height: 90vh; overflow-y: auto; padding: 1.75rem; }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
+    .modal-title { font-size: 1.1rem; font-weight: 700; color: #fff; }
+    .modal-close { background: none; border: none; color: var(--muted);
+      font-size: 1.4rem; cursor: pointer; padding: .2rem; line-height: 1; }
+    .modal-close:hover { color: var(--text); }
+    .modal-footer { display: flex; gap: .75rem; margin-top: 1.25rem; }
+    .modal-footer .btn { flex: 1; justify-content: center; }
+
+    /* ─── IMAGE UPLOAD ───────────────────────────────────────── */
+    .img-upload-area { border: 2px dashed var(--border); border-radius: 10px;
+      padding: 1.5rem; text-align: center; cursor: pointer; transition: border-color .2s;
+      position: relative; overflow: hidden; }
+    .img-upload-area:hover, .img-upload-area.drag { border-color: var(--accent); }
+    .img-upload-area input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+    .img-upload-area i { font-size: 2rem; color: var(--muted); display: block; margin-bottom: .5rem; }
+    .img-upload-area p { font-size: .8rem; color: var(--muted); }
+    .img-preview { width: 100%; max-height: 180px; object-fit: cover; border-radius: 8px;
+      margin-top: .75rem; display: none; }
+    .upload-progress { height: 3px; background: var(--surface-2); border-radius: 2px;
+      margin-top: .75rem; overflow: hidden; display: none; }
+    .upload-progress-bar { height: 100%; background: var(--accent); width: 0%; transition: width .3s; }
+
+    /* ─── TOAST ──────────────────────────────────────────────── */
+    #toast-container { position: fixed; bottom: 1.5rem; right: 1.5rem;
+      z-index: 2000; display: flex; flex-direction: column; gap: .5rem; }
+    .toast { background: var(--surface-2); border: 1px solid var(--border);
+      border-radius: 10px; padding: .75rem 1.1rem; font-size: .84rem;
+      display: flex; align-items: center; gap: .6rem; min-width: 240px;
+      animation: slideIn .3s ease; box-shadow: 0 4px 20px rgba(0,0,0,.4); }
+    .toast.success { border-color: rgba(34,197,94,.35); color: var(--success); }
+    .toast.error { border-color: rgba(239,68,68,.35); color: var(--danger); }
+    @keyframes slideIn { from { transform: translateX(110%); } to { transform: translateX(0); } }
+
+    /* ─── EMPTY STATE ────────────────────────────────────────── */
+    .empty-state { text-align: center; padding: 3rem 1rem; color: var(--muted); }
+    .empty-state i { font-size: 2.5rem; display: block; margin-bottom: .75rem; }
+    .empty-state p { font-size: .875rem; }
+
+    /* ─── LOADING ────────────────────────────────────────────── */
+    .spinner { display: inline-block; width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,.2); border-top-color: #fff;
+      border-radius: 50%; animation: spin .7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ─── PREVIEW LINK ───────────────────────────────────────── */
+    .preview-link { display: inline-flex; align-items: center; gap: .4rem;
+      font-size: .75rem; color: var(--accent-lt); text-decoration: none;
+      transition: opacity .2s; }
+    .preview-link:hover { opacity: .7; }
+
+    /* ─── RESPONSIVE ─────────────────────────────────────────── */
+    @media (max-width: 640px) {
+      .sidebar { display: none; }
+      .main { padding: 1rem; }
+      .achievement-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ==================== LOGIN ==================== -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">CMJL</div>
+    <div class="login-sub">Admin Panel</div>
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" id="login-email" placeholder="your@email.com" autocomplete="email">
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="btn btn-primary" id="login-btn">
+      <i class="ri-lock-unlock-line"></i> Sign In
+    </button>
+    <div id="login-error"></div>
+  </div>
+</div>
+
+<!-- ==================== DASHBOARD ==================== -->
+<div id="dashboard">
+  <div class="layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">CMJL</div>
+      <div class="sidebar-sub">Content Manager</div>
+
+      <div class="nav-label">Content</div>
+      <button class="nav-item active" data-panel="achievements">
+        <i class="ri-award-line"></i> Achievements
+      </button>
+      <button class="nav-item" data-panel="work">
+        <i class="ri-briefcase-line"></i> Work &amp; Education
+      </button>
+
+      <div class="sidebar-spacer"></div>
+
+      <div class="sidebar-user">
+        <div class="user-email" id="user-email-display"></div>
+        <a href="index.html" target="_blank" class="preview-link">
+          <i class="ri-external-link-line"></i> View Portfolio
+        </a><br><br>
+        <button class="btn btn-ghost btn-sm" id="logout-btn" style="width:100%;justify-content:center;margin-top:.5rem">
+          <i class="ri-logout-box-line"></i> Logout
+        </button>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+      <div class="main-header">
+        <div>
+          <div class="main-title">Welcome back, <span>Carlos</span> 👋</div>
+        </div>
+        <div id="stats-row" class="stats-row" style="margin-bottom:0">
+          <div class="stat-card">
+            <div class="stat-value" id="stat-achievements">—</div>
+            <div class="stat-label">Achievements</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="stat-experience">—</div>
+            <div class="stat-label">Experience</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="stat-education">—</div>
+            <div class="stat-label">Education</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ACHIEVEMENTS PANEL -->
+      <div class="section-panel active" id="panel-achievements">
+        <div class="sec-header">
+          <div class="sec-title">Achievements</div>
+          <button class="btn btn-primary btn-sm" id="add-achievement-btn">
+            <i class="ri-add-line"></i> Add New
+          </button>
+        </div>
+        <div class="achievement-grid" id="achievement-grid">
+          <div class="empty-state"><div class="spinner"></div></div>
+        </div>
+      </div>
+
+      <!-- WORK PANEL -->
+      <div class="section-panel" id="panel-work">
+        <div class="tab-row">
+          <button class="tab-btn active" data-work-tab="experience">
+            <i class="ri-briefcase-3-line"></i> Experience
+          </button>
+          <button class="tab-btn" data-work-tab="education">
+            <i class="ri-graduation-cap-line"></i> Education
+          </button>
+        </div>
+        <div class="sec-header">
+          <div class="sec-title" id="work-sec-title">Experience</div>
+          <button class="btn btn-primary btn-sm" id="add-work-btn">
+            <i class="ri-add-line"></i> Add New
+          </button>
+        </div>
+        <div class="work-list" id="work-list">
+          <div class="empty-state"><div class="spinner"></div></div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ==================== MODAL ==================== -->
+<div class="modal-overlay" id="modal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Add Achievement</div>
+      <button class="modal-close" id="modal-close-btn">&times;</button>
+    </div>
+    <div id="modal-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="modal-cancel-btn">Cancel</button>
+      <button class="btn btn-primary" id="modal-save-btn">
+        <i class="ri-save-line"></i> Save
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== TOASTS ==================== -->
+<div id="toast-container"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+//  FIREBASE CONFIG — fill these in from Firebase Console
+// ══════════════════════════════════════════════════════════
+const FIREBASE_CONFIG = {
+  apiKey:            'AIzaSyDf5MylXp8idwwp77NbgM7wcXlrKmIiAIQ',
+  authDomain:        'cmjlportfolio.firebaseapp.com',
+  projectId:         'cmjlportfolio',
+  storageBucket:     'cmjlportfolio.firebasestorage.app',
+  messagingSenderId: '875675827071',
+  appId:             '1:875675827071:web:35658c04f4cce171f2f84a'
+}
+
+firebase.initializeApp(FIREBASE_CONFIG)
+const auth    = firebase.auth()
+const db      = firebase.firestore()
+
+// ── State ────────────────────────────────────────────────
+let currentWorkTab  = 'experience'
+let editingId       = null
+let editingType     = null   // 'achievement' | 'work'
+let uploadedImageUrl = null
+
+// ══════════════════════════════════════════════════════════
+//  AUTH
+// ══════════════════════════════════════════════════════════
+auth.onAuthStateChanged(user => {
+  if (user) {
+    document.getElementById('login-screen').style.display  = 'none'
+    document.getElementById('dashboard').style.display     = 'block'
+    document.getElementById('user-email-display').textContent = user.email
+    loadAll()
+  } else {
+    document.getElementById('login-screen').style.display  = 'flex'
+    document.getElementById('dashboard').style.display     = 'none'
+  }
+})
+
+document.getElementById('login-btn').addEventListener('click', async () => {
+  const btn  = document.getElementById('login-btn')
+  const err  = document.getElementById('login-error')
+  const email = document.getElementById('login-email').value.trim()
+  const pass  = document.getElementById('login-password').value
+  err.style.display = 'none'
+  btn.innerHTML = '<span class="spinner"></span> Signing in...'
+  btn.disabled = true
+  try {
+    await auth.signInWithEmailAndPassword(email, pass)
+  } catch (e) {
+    err.textContent = 'Invalid email or password.'
+    err.style.display = 'block'
+    btn.innerHTML = '<i class="ri-lock-unlock-line"></i> Sign In'
+    btn.disabled = false
+  }
+})
+
+document.getElementById('login-password').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('login-btn').click()
+})
+
+document.getElementById('logout-btn').addEventListener('click', () => auth.signOut())
+
+// ══════════════════════════════════════════════════════════
+//  NAVIGATION
+// ══════════════════════════════════════════════════════════
+document.querySelectorAll('.nav-item[data-panel]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'))
+    document.querySelectorAll('.section-panel').forEach(p => p.classList.remove('active'))
+    btn.classList.add('active')
+    document.getElementById('panel-' + btn.dataset.panel).classList.add('active')
+  })
+})
+
+document.querySelectorAll('.tab-btn[data-work-tab]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn[data-work-tab]').forEach(b => b.classList.remove('active'))
+    btn.classList.add('active')
+    currentWorkTab = btn.dataset.workTab
+    document.getElementById('work-sec-title').textContent =
+      currentWorkTab === 'experience' ? 'Experience' : 'Education'
+    loadWork()
+  })
+})
+
+// ══════════════════════════════════════════════════════════
+//  TOAST
+// ══════════════════════════════════════════════════════════
+function toast(msg, type = 'success') {
+  const el = document.createElement('div')
+  el.className = `toast ${type}`
+  el.innerHTML = `<i class="ri-${type === 'success' ? 'checkbox-circle' : 'error-warning'}-line"></i> ${msg}`
+  document.getElementById('toast-container').appendChild(el)
+  setTimeout(() => el.remove(), 3500)
+}
+
+// ══════════════════════════════════════════════════════════
+//  LOAD ALL
+// ══════════════════════════════════════════════════════════
+async function loadAll() {
+  await Promise.all([loadAchievements(), loadWork(), updateStats()])
+}
+
+async function updateStats() {
+  const [acSnap, expSnap, eduSnap] = await Promise.all([
+    db.collection('achievements').get(),
+    db.collection('work').where('tab','==','experience').get(),
+    db.collection('work').where('tab','==','education').get()
+  ])
+  document.getElementById('stat-achievements').textContent = acSnap.size
+  document.getElementById('stat-experience').textContent   = expSnap.size
+  document.getElementById('stat-education').textContent    = eduSnap.size
+}
+
+// ══════════════════════════════════════════════════════════
+//  ACHIEVEMENTS
+// ══════════════════════════════════════════════════════════
+async function loadAchievements() {
+  const grid = document.getElementById('achievement-grid')
+  grid.innerHTML = '<div class="empty-state"><div class="spinner"></div></div>'
+  const snap = await db.collection('achievements').orderBy('order').get()
+  if (snap.empty) {
+    grid.innerHTML = '<div class="empty-state"><i class="ri-award-line"></i><p>No achievements yet. Add your first one!</p></div>'
+    return
+  }
+  grid.innerHTML = ''
+  snap.forEach(doc => grid.appendChild(renderAchievementCard(doc.id, doc.data())))
+}
+
+function renderAchievementCard(id, data) {
+  const card = document.createElement('div')
+  card.className = 'ac-card'
+  card.innerHTML = `
+    <div class="ac-card-img">
+      ${data.imageUrl ? `<img src="${data.imageUrl}" alt="${data.title}">` : '<i class="ri-image-line" style="font-size:2rem"></i>'}
+    </div>
+    <div class="ac-card-body">
+      <div class="ac-card-num">${String(data.order || '').padStart(2,'0')} · ${data.category || ''}</div>
+      <div class="ac-card-title">${data.title || ''}</div>
+      <div class="ac-card-cat">${data.language || ''}</div>
+      <div class="ac-card-actions">
+        <button class="btn btn-ghost btn-sm" onclick="openAchievementModal('${id}')">
+          <i class="ri-pencil-line"></i> Edit
+        </button>
+        <button class="btn btn-danger btn-sm" onclick="deleteDoc('achievements','${id}',loadAchievements)">
+          <i class="ri-delete-bin-line"></i>
+        </button>
+      </div>
+    </div>
+  `
+  return card
+}
+
+document.getElementById('add-achievement-btn').addEventListener('click', () => openAchievementModal(null))
+
+function openAchievementModal(id) {
+  editingId   = id
+  editingType = 'achievement'
+  uploadedImageUrl = null
+  document.getElementById('modal-title').textContent = id ? 'Edit Achievement' : 'Add Achievement'
+
+  document.getElementById('modal-body').innerHTML = `
+    <div class="form-group">
+      <label>Order Number</label>
+      <input type="number" id="f-order" min="1" placeholder="1">
+    </div>
+    <div class="form-group">
+      <label>Category Label <span style="color:var(--muted)">(top right, e.g. "IT Essentials")</span></label>
+      <input type="text" id="f-category" placeholder="IT Essentials">
+    </div>
+    <div class="form-group">
+      <label>Title <span style="color:var(--muted)">(use \\n for line break)</span></label>
+      <input type="text" id="f-title" placeholder="Cisco\\nPython">
+    </div>
+    <div class="form-group">
+      <label>Subtitle Label</label>
+      <input type="text" id="f-subtitle" placeholder="Program Language used">
+    </div>
+    <div class="form-group">
+      <label>Language / Tech</label>
+      <input type="text" id="f-language" placeholder="Python">
+    </div>
+    <div class="form-group">
+      <label>Link (button URL)</label>
+      <input type="url" id="f-link" placeholder="https://credly.com/...">
+    </div>
+    <div class="form-group">
+      <label>Image</label>
+      <div class="img-upload-area" id="upload-area">
+        <input type="file" id="f-image" accept="image/*">
+        <i class="ri-upload-cloud-2-line"></i>
+        <p>Click or drag an image here</p>
+      </div>
+      <img class="img-preview" id="img-preview" src="" alt="preview">
+      <div class="upload-progress" id="upload-progress">
+        <div class="upload-progress-bar" id="upload-progress-bar"></div>
+      </div>
+    </div>
+  `
+
+  // Pre-fill if editing
+  if (id) {
+    db.collection('achievements').doc(id).get().then(doc => {
+      const d = doc.data()
+      document.getElementById('f-order').value    = d.order    || ''
+      document.getElementById('f-category').value = d.category || ''
+      document.getElementById('f-title').value    = d.title    || ''
+      document.getElementById('f-subtitle').value = d.subtitle || ''
+      document.getElementById('f-language').value = d.language || ''
+      document.getElementById('f-link').value     = d.link     || ''
+      if (d.imageUrl) {
+        const prev = document.getElementById('img-preview')
+        prev.src = d.imageUrl
+        prev.style.display = 'block'
+        uploadedImageUrl = d.imageUrl
+      }
+    })
+  }
+
+  // Image preview on file select
+  document.getElementById('f-image').addEventListener('change', e => {
+    const file = e.target.files[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = ev => {
+      const prev = document.getElementById('img-preview')
+      prev.src = ev.target.result
+      prev.style.display = 'block'
+    }
+    reader.readAsDataURL(file)
+  })
+
+  openModal()
+}
+
+// ══════════════════════════════════════════════════════════
+//  WORK
+// ══════════════════════════════════════════════════════════
+async function loadWork() {
+  const list = document.getElementById('work-list')
+  list.innerHTML = '<div class="empty-state"><div class="spinner"></div></div>'
+  const snap = await db.collection('work')
+    .where('tab', '==', currentWorkTab)
+    .orderBy('order')
+    .get()
+  if (snap.empty) {
+    list.innerHTML = '<div class="empty-state"><i class="ri-briefcase-line"></i><p>No items yet. Add your first one!</p></div>'
+    return
+  }
+  list.innerHTML = ''
+  snap.forEach(doc => list.appendChild(renderWorkItem(doc.id, doc.data())))
+}
+
+function renderWorkItem(id, data) {
+  const div = document.createElement('div')
+  div.className = 'wk-item'
+  div.innerHTML = `
+    <div class="wk-info">
+      <div class="wk-title">${data.title || ''}</div>
+      <div class="wk-sub">${data.subtitle || ''}</div>
+      <div class="wk-year">${data.year || ''}</div>
+      <div class="wk-desc">${data.description || ''}</div>
+    </div>
+    <div class="wk-actions">
+      <button class="btn btn-ghost btn-sm" onclick="openWorkModal('${id}')">
+        <i class="ri-pencil-line"></i> Edit
+      </button>
+      <button class="btn btn-danger btn-sm" onclick="deleteDoc('work','${id}',loadWork)">
+        <i class="ri-delete-bin-line"></i>
+      </button>
+    </div>
+  `
+  return div
+}
+
+document.getElementById('add-work-btn').addEventListener('click', () => openWorkModal(null))
+
+function openWorkModal(id) {
+  editingId   = id
+  editingType = 'work'
+  document.getElementById('modal-title').textContent = id ? 'Edit Entry' : 'Add Entry'
+  document.getElementById('modal-body').innerHTML = `
+    <div class="form-group">
+      <label>Tab</label>
+      <select id="f-tab">
+        <option value="experience" ${currentWorkTab==='experience'?'selected':''}>Experience</option>
+        <option value="education"  ${currentWorkTab==='education'?'selected':''}>Education</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Order</label>
+      <input type="number" id="f-order" min="1" placeholder="1">
+    </div>
+    <div class="form-group">
+      <label>Title <span style="color:var(--muted)">(role or school name)</span></label>
+      <input type="text" id="f-title" placeholder="Graphic Designer">
+    </div>
+    <div class="form-group">
+      <label>Subtitle <span style="color:var(--muted)">(company or track)</span></label>
+      <input type="text" id="f-subtitle" placeholder="Freelancer">
+    </div>
+    <div class="form-group">
+      <label>Year</label>
+      <input type="text" id="f-year" placeholder="2023 or Currently">
+    </div>
+    <div class="form-group">
+      <label>Description</label>
+      <textarea id="f-description" placeholder="Describe your role or experience..."></textarea>
+    </div>
+  `
+
+  if (id) {
+    db.collection('work').doc(id).get().then(doc => {
+      const d = doc.data()
+      document.getElementById('f-tab').value         = d.tab         || currentWorkTab
+      document.getElementById('f-order').value       = d.order       || ''
+      document.getElementById('f-title').value       = d.title       || ''
+      document.getElementById('f-subtitle').value    = d.subtitle    || ''
+      document.getElementById('f-year').value        = d.year        || ''
+      document.getElementById('f-description').value = d.description || ''
+    })
+  }
+
+  openModal()
+}
+
+// ══════════════════════════════════════════════════════════
+//  MODAL LOGIC
+// ══════════════════════════════════════════════════════════
+function openModal()  { document.getElementById('modal').classList.add('open')    }
+function closeModal() { document.getElementById('modal').classList.remove('open') }
+
+document.getElementById('modal-close-btn').addEventListener('click', closeModal)
+document.getElementById('modal-cancel-btn').addEventListener('click', closeModal)
+document.getElementById('modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('modal')) closeModal()
+})
+
+document.getElementById('modal-save-btn').addEventListener('click', async () => {
+  const btn = document.getElementById('modal-save-btn')
+  btn.disabled = true
+  btn.innerHTML = '<span class="spinner"></span> Saving...'
+
+  try {
+    if (editingType === 'achievement') await saveAchievement()
+    else await saveWork()
+    closeModal()
+    toast('Saved successfully!')
+    loadAll()
+  } catch(e) {
+    toast('Error: ' + e.message, 'error')
+  } finally {
+    btn.disabled = false
+    btn.innerHTML = '<i class="ri-save-line"></i> Save'
+  }
+})
+
+// ══════════════════════════════════════════════════════════
+//  SAVE ACHIEVEMENT
+// ══════════════════════════════════════════════════════════
+async function saveAchievement() {
+  const imageFile = document.getElementById('f-image').files[0]
+  let imageUrl = uploadedImageUrl || ''
+
+  if (imageFile) {
+    imageUrl = await uploadImage(imageFile)
+  }
+
+  const data = {
+    order:    parseInt(document.getElementById('f-order').value)    || 1,
+    category: document.getElementById('f-category').value.trim(),
+    title:    document.getElementById('f-title').value.trim(),
+    subtitle: document.getElementById('f-subtitle').value.trim() || 'Program Language used',
+    language: document.getElementById('f-language').value.trim(),
+    link:     document.getElementById('f-link').value.trim(),
+    imageUrl,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }
+
+  if (editingId) {
+    await db.collection('achievements').doc(editingId).update(data)
+  } else {
+    data.createdAt = firebase.firestore.FieldValue.serverTimestamp()
+    await db.collection('achievements').add(data)
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+//  SAVE WORK
+// ══════════════════════════════════════════════════════════
+async function saveWork() {
+  const data = {
+    tab:         document.getElementById('f-tab').value,
+    order:       parseInt(document.getElementById('f-order').value) || 1,
+    title:       document.getElementById('f-title').value.trim(),
+    subtitle:    document.getElementById('f-subtitle').value.trim(),
+    year:        document.getElementById('f-year').value.trim(),
+    description: document.getElementById('f-description').value.trim(),
+    updatedAt:   firebase.firestore.FieldValue.serverTimestamp()
+  }
+
+  if (editingId) {
+    await db.collection('work').doc(editingId).update(data)
+  } else {
+    data.createdAt = firebase.firestore.FieldValue.serverTimestamp()
+    await db.collection('work').add(data)
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+//  DELETE
+// ══════════════════════════════════════════════════════════
+async function deleteDoc(collection, id, reloadFn) {
+  if (!confirm('Delete this item? This cannot be undone.')) return
+  try {
+    await db.collection(collection).doc(id).delete()
+    toast('Deleted.')
+    await reloadFn()
+    await updateStats()
+  } catch(e) {
+    toast('Error deleting: ' + e.message, 'error')
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+//  IMAGE UPLOAD — Cloudinary (free, no billing needed)
+// ══════════════════════════════════════════════════════════
+// Fill these in after setting up Cloudinary (see ADMIN_SETUP.md)
+const CLOUDINARY_CLOUD_NAME    = 'xrovijrel'
+const CLOUDINARY_UPLOAD_PRESET = 'yz6uwjhg'
+
+async function uploadImage(file) {
+  const progress    = document.getElementById('upload-progress')
+  const progressBar = document.getElementById('upload-progress-bar')
+  progress.style.display = 'block'
+  progressBar.style.width = '30%'
+
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET)
+  formData.append('folder', 'cmjl-portfolio')
+
+  const res = await fetch(
+    `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+    { method: 'POST', body: formData }
+  )
+
+  progressBar.style.width = '90%'
+
+  if (!res.ok) throw new Error('Image upload failed. Check your Cloudinary config.')
+  const data = await res.json()
+
+  progressBar.style.width = '100%'
+  return data.secure_url
+}
+</script>
+</body>
+</html>

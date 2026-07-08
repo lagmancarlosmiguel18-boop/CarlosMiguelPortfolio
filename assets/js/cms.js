@@ -1,0 +1,139 @@
+/*=============== CMS — Dynamic Portfolio Content Loader ===============*/
+// ── Fill in your Firebase config from Firebase Console ──────────────────
+const CMS_FIREBASE_CONFIG = {
+  apiKey:            'AIzaSyDf5MylXp8idwwp77NbgM7wcXlrKmIiAIQ',
+  authDomain:        'cmjlportfolio.firebaseapp.com',
+  projectId:         'cmjlportfolio',
+  storageBucket:     'cmjlportfolio.firebasestorage.app',
+  messagingSenderId: '875675827071',
+  appId:             '1:875675827071:web:35658c04f4cce171f2f84a'
+}
+// ─────────────────────────────────────────────────────────────────────────
+
+;(() => {
+  // Avoid double-init if Firebase was already initialized (e.g. by admin.html)
+  try {
+    firebase.app('cms')
+  } catch {
+    firebase.initializeApp(CMS_FIREBASE_CONFIG, 'cms')
+  }
+
+  const db = firebase.app('cms').firestore()
+
+  // ── Helpers ────────────────────────────────────────────────────────────
+  const pad = n => String(n).padStart(2, '0')
+
+  // ── Build an achievement slide ─────────────────────────────────────────
+  function buildSlide(data) {
+    const article = document.createElement('article')
+    article.className = 'projects__card swiper-slide'
+
+    const titleHtml = (data.title || '').replace(/\\n/g, '<br>')
+    const numStr    = pad(data.order || 1)
+
+    article.innerHTML = `
+      <div class="projects__number">
+        <span>${numStr}</span>
+        <p>${data.category || ''}</p>
+      </div>
+      <div class="projects__data">
+        <h1 class="projects__title">${titleHtml}</h1>
+        <p class="projects__subtitle">${data.subtitle || 'Program Language used'}</p>
+        <p class="projects__description">${data.language || ''}</p>
+      </div>
+      <div class="projects__image">
+        ${data.imageUrl
+          ? `<img src="${data.imageUrl}" alt="${data.title || 'achievement'}" class="projects__img">`
+          : ''}
+        <a href="${data.link || '#'}" target="_blank" class="projects__button button">
+          <i class="ri-arrow-right-line"></i>
+        </a>
+      </div>
+    `
+    return article
+  }
+
+  // ── Build a work card ──────────────────────────────────────────────────
+  function buildWorkCard(data) {
+    const div = document.createElement('div')
+    div.className = 'work__card'
+    div.innerHTML = `
+      <div class="work__data">
+        <div>
+          <h1 class="work__title">${data.title || ''}</h1>
+          <h3 class="work__subtitle">${data.subtitle || ''}</h3>
+        </div>
+        <h2 class="work__year">${data.year || ''}</h2>
+      </div>
+      <p class="work__description">${data.description || ''}</p>
+    `
+    return div
+  }
+
+  // ── Load achievements → inject into Swiper ─────────────────────────────
+  async function loadAchievements() {
+    try {
+      const snap = await db.collection('achievements').orderBy('order').get()
+      if (snap.empty) return  // fallback: keep static HTML
+
+      const wrapper = document.querySelector('.projects__swiper .swiper-wrapper')
+      if (!wrapper) return
+
+      wrapper.innerHTML = ''
+      snap.forEach(doc => wrapper.appendChild(buildSlide(doc.data())))
+
+      // Re-initialize Swiper with the new slides
+      if (window.swiperProjects) {
+        window.swiperProjects.destroy(true, true)
+      }
+      window.swiperProjects = new Swiper('.projects__swiper', {
+        loop: true,
+        spaceBetween: 24,
+        slidesPerView: 'auto',
+        grabCursor: true,
+        speed: 600,
+        pagination: { el: '.swiper-pagination', clickable: true },
+        autoplay: { delay: 3000, disableOnInteraction: false },
+      })
+    } catch (err) {
+      // Firebase not configured or network error → static HTML stays
+      console.info('CMS: using static achievement content', err.message)
+    }
+  }
+
+  // ── Load work / education ──────────────────────────────────────────────
+  async function loadWork() {
+    try {
+      const snap = await db.collection('work').orderBy('order').get()
+      if (snap.empty) return  // fallback: keep static HTML
+
+      const expEl = document.getElementById('experience')
+      const eduEl = document.getElementById('education')
+      if (!expEl || !eduEl) return
+
+      expEl.innerHTML = ''
+      eduEl.innerHTML = ''
+
+      snap.forEach(doc => {
+        const data = doc.data()
+        const card = buildWorkCard(data)
+        if (data.tab === 'education') eduEl.appendChild(card)
+        else expEl.appendChild(card)
+      })
+    } catch (err) {
+      console.info('CMS: using static work content', err.message)
+    }
+  }
+
+  // ── Boot ───────────────────────────────────────────────────────────────
+  // Wait for DOM + Swiper library to be ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      loadAchievements()
+      loadWork()
+    })
+  } else {
+    loadAchievements()
+    loadWork()
+  }
+})()
