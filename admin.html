@@ -478,14 +478,19 @@ async function loadAll() {
 }
 
 async function updateStats() {
-  const [acSnap, expSnap, eduSnap] = await Promise.all([
+  const [acSnap, workSnap] = await Promise.all([
     db.collection('achievements').get(),
-    db.collection('work').where('tab','==','experience').get(),
-    db.collection('work').where('tab','==','education').get()
+    db.collection('work').get()
   ])
+  let expCount = 0, eduCount = 0
+  workSnap.forEach(doc => {
+    const tab = doc.data().tab
+    if (tab === 'experience') expCount++
+    else if (tab === 'education') eduCount++
+  })
   document.getElementById('stat-achievements').textContent = acSnap.size
-  document.getElementById('stat-experience').textContent   = expSnap.size
-  document.getElementById('stat-education').textContent    = eduSnap.size
+  document.getElementById('stat-experience').textContent   = expCount
+  document.getElementById('stat-education').textContent    = eduCount
 }
 
 // ══════════════════════════════════════════════════════════
@@ -615,16 +620,20 @@ function openAchievementModal(id) {
 async function loadWork() {
   const list = document.getElementById('work-list')
   list.innerHTML = '<div class="empty-state"><div class="spinner"></div></div>'
-  const snap = await db.collection('work')
-    .where('tab', '==', currentWorkTab)
-    .orderBy('order')
-    .get()
-  if (snap.empty) {
+  // Fetch all, filter client-side — avoids composite index requirement
+  const snap = await db.collection('work').get()
+  const items = []
+  snap.forEach(doc => {
+    const d = doc.data()
+    if (d.tab === currentWorkTab) items.push({ id: doc.id, ...d })
+  })
+  items.sort((a, b) => (a.order || 0) - (b.order || 0))
+  if (items.length === 0) {
     list.innerHTML = '<div class="empty-state"><i class="ri-briefcase-line"></i><p>No items yet. Add your first one!</p></div>'
     return
   }
   list.innerHTML = ''
-  snap.forEach(doc => list.appendChild(renderWorkItem(doc.id, doc.data())))
+  items.forEach(item => list.appendChild(renderWorkItem(item.id, item)))
 }
 
 function renderWorkItem(id, data) {
@@ -894,6 +903,8 @@ async function checkAndShowSeedBanner() {
   ])
   if (acSnap.empty && wkSnap.empty) {
     document.getElementById('seed-banner').style.display = 'flex'
+  } else {
+    document.getElementById('seed-banner').style.display = 'none'
   }
 }
 </script>

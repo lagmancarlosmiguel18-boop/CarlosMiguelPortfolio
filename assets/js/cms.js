@@ -104,18 +104,22 @@ const CMS_FIREBASE_CONFIG = {
   // ── Load work / education ──────────────────────────────────────────────
   async function loadWork() {
     try {
-      const snap = await db.collection('work').orderBy('order').get()
+      const snap = await db.collection('work').get()
       if (snap.empty) return  // fallback: keep static HTML
 
       const expEl = document.getElementById('experience')
       const eduEl = document.getElementById('education')
       if (!expEl || !eduEl) return
 
+      // Sort client-side — avoids composite index requirement
+      const items = []
+      snap.forEach(doc => items.push(doc.data()))
+      items.sort((a, b) => (a.order || 0) - (b.order || 0))
+
       expEl.innerHTML = ''
       eduEl.innerHTML = ''
 
-      snap.forEach(doc => {
-        const data = doc.data()
+      items.forEach(data => {
         const card = buildWorkCard(data)
         if (data.tab === 'education') eduEl.appendChild(card)
         else expEl.appendChild(card)
