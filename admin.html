@@ -822,9 +822,13 @@ async function uploadImage(file) {
   )
 
   progressBar.style.width = '90%'
-
-  if (!res.ok) throw new Error('Image upload failed. Check your Cloudinary config.')
   const data = await res.json()
+  console.log('Cloudinary response:', data)
+
+  if (!res.ok) {
+    const reason = data?.error?.message || JSON.stringify(data)
+    throw new Error(`Cloudinary: ${reason}`)
+  }
 
   progressBar.style.width = '100%'
   return data.secure_url
