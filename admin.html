@@ -866,12 +866,17 @@ async function deleteDoc(collection, id, reloadFn) {
 const IMGBB_API_KEY = 'YOUR_IMGBB_API_KEY'
 
 async function uploadImage(file) {
+  // Videos can't go to ImgBB — user must paste a URL instead
+  if (file.type.startsWith('video/')) {
+    throw new Error('Videos cannot be uploaded directly. Please paste a YouTube or MP4 link in the "Video URL" field instead.')
+  }
+
   const progress    = document.getElementById('upload-progress')
   const progressBar = document.getElementById('upload-progress-bar')
   progress.style.display = 'block'
   progressBar.style.width = '20%'
 
-  // Convert file to base64
+  // Convert image to base64
   const base64 = await new Promise((resolve, reject) => {
     const reader = new FileReader()
     reader.onload  = () => resolve(reader.result.split(',')[1])
@@ -895,7 +900,8 @@ async function uploadImage(file) {
   console.log('ImgBB response:', data)
 
   if (!data.success) {
-    throw new Error('ImgBB upload failed: ' + (data?.error?.message || JSON.stringify(data)))
+    const reason = data?.error?.message || data?.status_txt || JSON.stringify(data)
+    throw new Error('Image upload failed: ' + reason)
   }
 
   progressBar.style.width = '100%'

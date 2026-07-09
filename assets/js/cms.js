@@ -94,8 +94,12 @@ const CMS_FIREBASE_CONFIG = {
       const wrapper = document.querySelector('.projects__swiper .swiper-wrapper')
       if (!wrapper) return
 
+      // Sort client-side then inject
+      const slides = []
+      snap.forEach(doc => slides.push(doc.data()))
+      slides.sort((a, b) => (a.order || 0) - (b.order || 0))
       wrapper.innerHTML = ''
-      snap.forEach(doc => wrapper.appendChild(buildSlide(doc.data())))
+      slides.forEach(data => wrapper.appendChild(buildSlide(data)))
 
       // Re-initialize Swiper with the new slides
       if (window.swiperProjects) {
@@ -131,14 +135,34 @@ const CMS_FIREBASE_CONFIG = {
       snap.forEach(doc => items.push(doc.data()))
       items.sort((a, b) => (a.order || 0) - (b.order || 0))
 
-      expEl.innerHTML = ''
-      eduEl.innerHTML = ''
+      // Remove only .work__card elements — preserves any structural divs inside
+      expEl.querySelectorAll('.work__card').forEach(el => el.remove())
+      eduEl.querySelectorAll('.work__card').forEach(el => el.remove())
 
       items.forEach(data => {
         const card = buildWorkCard(data)
         if (data.tab === 'education') eduEl.appendChild(card)
         else expEl.appendChild(card)
       })
+
+      // ── Re-apply work-active + force reflow ───────────────────────────────
+      // Dynamic injection collapses the height-based show/hide — this restores it
+      requestAnimationFrame(() => {
+        // Find the currently active tab button
+        const activeTab = document.querySelector('[data-target].work-active')
+        const targetSel = activeTab ? activeTab.dataset.target : '#experience'
+        const targetEl  = document.querySelector(targetSel)
+
+        // Reset all content panes then activate the correct one
+        document.querySelectorAll('[data-content]').forEach(el =>
+          el.classList.remove('work-active')
+        )
+        if (targetEl) {
+          targetEl.classList.add('work-active')
+          void targetEl.offsetHeight   // trigger reflow — fixes resize-to-show bug
+        }
+      })
+
     } catch (err) {
       console.info('CMS: using static work content', err.message)
     }
