@@ -23,18 +23,35 @@ const CMS_FIREBASE_CONFIG = {
   // ── Helpers ────────────────────────────────────────────────────────────
   const pad = n => String(n).padStart(2, '0')
 
-  // ── Build an achievement slide ─────────────────────────────────────────
+  // ── Detect and build media element (image / mp4 / youtube) ───────────────
+  function buildMedia(url, title) {
+    if (!url) return ''
+    const u = url.toLowerCase()
+    if (u.includes('youtube.com') || u.includes('youtu.be')) {
+      const match = url.match(/(?:v=|youtu\.be\/)([^&?/]+)/)
+      const id = match ? match[1] : null
+      return id ? `<iframe class="projects__img" src="https://www.youtube.com/embed/${id}" frameborder="0" allowfullscreen style="border-radius:inherit"></iframe>` : ''
+    }
+    if (u.includes('.mp4') || u.includes('.webm') || u.includes('.mov')) {
+      return `<video class="projects__img" src="${url}" autoplay muted loop playsinline style="object-fit:cover;border-radius:inherit"></video>`
+    }
+    return `<img src="${url}" alt="${title || 'achievement'}" class="projects__img">`
+  }
+
+  // ── Build an achievement slide — exactly matches original HTML ─────────────
   function buildSlide(data) {
     const article = document.createElement('article')
     article.className = 'projects__card swiper-slide'
 
     const titleHtml = (data.title || '').replace(/\\n/g, '<br>')
     const numStr    = pad(data.order || 1)
+    const mediaUrl  = data.imageUrl || data.videoUrl || ''
 
     article.innerHTML = `
+      <div class="blob"></div>
       <div class="projects__number">
-        <span>${numStr}</span>
-        <p>${data.category || ''}</p>
+        <h1>${numStr}</h1>
+        <h3>${data.category || ''}</h3>
       </div>
       <div class="projects__data">
         <h1 class="projects__title">${titleHtml}</h1>
@@ -42,11 +59,9 @@ const CMS_FIREBASE_CONFIG = {
         <p class="projects__description">${data.language || ''}</p>
       </div>
       <div class="projects__image">
-        ${data.imageUrl
-          ? `<img src="${data.imageUrl}" alt="${data.title || 'achievement'}" class="projects__img">`
-          : ''}
-        <a href="${data.link || '#'}" target="_blank" class="projects__button button">
-          <i class="ri-arrow-right-line"></i>
+        ${buildMedia(mediaUrl, data.title)}
+        <a href="${data.link || '#'}" target="_blank" class="projects__button">
+          <i class="ri-arrow-right-up-long-line"></i>
         </a>
       </div>
     `

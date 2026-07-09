@@ -499,13 +499,22 @@ async function updateStats() {
 async function loadAchievements() {
   const grid = document.getElementById('achievement-grid')
   grid.innerHTML = '<div class="empty-state"><div class="spinner"></div></div>'
-  const snap = await db.collection('achievements').orderBy('order').get()
-  if (snap.empty) {
-    grid.innerHTML = '<div class="empty-state"><i class="ri-award-line"></i><p>No achievements yet. Add your first one!</p></div>'
-    return
+  try {
+    const snap = await db.collection('achievements').get()
+    if (snap.empty) {
+      grid.innerHTML = '<div class="empty-state"><i class="ri-award-line"></i><p>No achievements yet. Add your first one!</p></div>'
+      return
+    }
+    // Sort client-side — avoids index requirement
+    const items = []
+    snap.forEach(doc => items.push({ id: doc.id, ...doc.data() }))
+    items.sort((a, b) => (a.order || 0) - (b.order || 0))
+    grid.innerHTML = ''
+    items.forEach(item => grid.appendChild(renderAchievementCard(item.id, item)))
+  } catch(e) {
+    console.error('loadAchievements error:', e)
+    grid.innerHTML = '<div class="empty-state"><i class="ri-error-warning-line"></i><p>Error loading: ' + e.message + '</p></div>'
   }
-  grid.innerHTML = ''
-  snap.forEach(doc => grid.appendChild(renderAchievementCard(doc.id, doc.data())))
 }
 
 function renderAchievementCard(id, data) {
@@ -513,7 +522,14 @@ function renderAchievementCard(id, data) {
   card.className = 'ac-card'
   card.innerHTML = `
     <div class="ac-card-img">
-      ${data.imageUrl ? `<img src="${data.imageUrl}" alt="${data.title}">` : '<i class="ri-image-line" style="font-size:2rem"></i>'}
+      ${data.imageUrl
+        ? `<img src="${data.imageUrl}" alt="${data.title}">`
+        : data.videoUrl
+          ? (data.videoUrl.includes('youtube') || data.videoUrl.includes('youtu.be')
+              ? `<div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4rem;color:var(--accent-lt)"><i class="ri-youtube-line" style="font-size:2rem"></i><span style="font-size:.7rem">YouTube</span></div>`
+              : `<video src="${data.videoUrl}" style="width:100%;height:100%;object-fit:cover" muted></video>`)
+          : '<i class="ri-image-line" style="font-size:2rem;color:var(--muted)"></i>'
+      }
     </div>
     <div class="ac-card-body">
       <div class="ac-card-num">${String(data.order || '').padStart(2,'0')} · ${data.category || ''}</div>
@@ -566,16 +582,22 @@ function openAchievementModal(id) {
       <input type="url" id="f-link" placeholder="https://credly.com/...">
     </div>
     <div class="form-group">
-      <label>Image</label>
+      <label>Image <span style="color:var(--muted)">(upload a file)</span></label>
       <div class="img-upload-area" id="upload-area">
-        <input type="file" id="f-image" accept="image/*">
+        <input type="file" id="f-image" accept="image/*,video/mp4,video/webm">
         <i class="ri-upload-cloud-2-line"></i>
-        <p>Click or drag an image here</p>
+        <p>Click or drag — image or MP4 video</p>
       </div>
-      <img class="img-preview" id="img-preview" src="" alt="preview">
+      <img class="img-preview" id="img-preview" src="" alt="preview" style="display:none">
+      <video id="vid-preview" controls style="display:none;width:100%;max-height:160px;border-radius:8px;margin-top:.75rem"></video>
       <div class="upload-progress" id="upload-progress">
         <div class="upload-progress-bar" id="upload-progress-bar"></div>
       </div>
+    </div>
+    <div class="form-group">
+      <label>— OR — Video URL <span style="color:var(--muted)">(YouTube / direct MP4 link)</span></label>
+      <input type="url" id="f-video-url" placeholder="https://youtube.com/watch?v=... or https://...mp4">
+      <div id="video-url-preview" style="margin-top:.5rem"></div>
     </div>
   `
 
@@ -595,20 +617,46 @@ function openAchievementModal(id) {
         prev.style.display = 'block'
         uploadedImageUrl = d.imageUrl
       }
+      if (d.videoUrl) {
+        const vf = document.getElementById('f-video-url')
+        if (vf) vf.value = d.videoUrl
+      }
     })
   }
 
-  // Image preview on file select
+  // Preview on file select (image or video)
   document.getElementById('f-image').addEventListener('change', e => {
     const file = e.target.files[0]
     if (!file) return
-    const reader = new FileReader()
-    reader.onload = ev => {
-      const prev = document.getElementById('img-preview')
-      prev.src = ev.target.result
-      prev.style.display = 'block'
+    const imgPrev = document.getElementById('img-preview')
+    const vidPrev = document.getElementById('vid-preview')
+    const reader  = new FileReader()
+    if (file.type.startsWith('video/')) {
+      imgPrev.style.display = 'none'
+      reader.onload = ev => {
+        vidPrev.src = ev.target.result
+        vidPrev.style.display = 'block'
+      }
+    } else {
+      vidPrev.style.display = 'none'
+      reader.onload = ev => {
+        imgPrev.src = ev.target.result
+        imgPrev.style.display = 'block'
+      }
     }
     reader.readAsDataURL(file)
+  })
+  // Video URL live preview
+  document.getElementById('f-video-url').addEventListener('input', e => {
+    const url = e.target.value.trim()
+    const box = document.getElementById('video-url-preview')
+    if (!url) { box.innerHTML = ''; return }
+    if (url.includes('youtube.com') || url.includes('youtu.be')) {
+      const id = url.match(/(?:v=|youtu\.be\/)([^&?/]+)/)?.[1]
+      box.innerHTML = id ? `<iframe width="100%" height="140" src="https://www.youtube.com/embed/${id}" frameborder="0" allowfullscreen style="border-radius:8px"></iframe>` : ''
+    } else if (url.match(/\.(mp4|webm|mov)/i)) {
+      box.innerHTML = `<video src="${url}" controls style="width:100%;max-height:140px;border-radius:8px"></video>`
+    }
   })
 
   openModal()
@@ -751,6 +799,9 @@ async function saveAchievement() {
     imageUrl = await uploadImage(imageFile)
   }
 
+  const videoUrlField = document.getElementById('f-video-url')
+  const videoUrl = videoUrlField ? videoUrlField.value.trim() : ''
+
   const data = {
     order:    parseInt(document.getElementById('f-order').value)    || 1,
     category: document.getElementById('f-category').value.trim(),
@@ -759,6 +810,7 @@ async function saveAchievement() {
     language: document.getElementById('f-language').value.trim(),
     link:     document.getElementById('f-link').value.trim(),
     imageUrl,
+    videoUrl,
     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
   }
 
