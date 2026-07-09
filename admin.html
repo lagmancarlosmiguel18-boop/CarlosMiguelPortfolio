@@ -582,11 +582,11 @@ function openAchievementModal(id) {
       <input type="url" id="f-link" placeholder="https://credly.com/...">
     </div>
     <div class="form-group">
-      <label>Image <span style="color:var(--muted)">(upload a file)</span></label>
+      <label>Image / Video <span style="color:var(--muted)">(jpg, png, mp4, webm — auto uploaded)</span></label>
       <div class="img-upload-area" id="upload-area">
         <input type="file" id="f-image" accept="image/*,video/mp4,video/webm">
         <i class="ri-upload-cloud-2-line"></i>
-        <p>Click or drag — image or MP4 video</p>
+        <p>Click or drag — image <b>or</b> MP4/WebM video</p>
       </div>
       <img class="img-preview" id="img-preview" src="" alt="preview" style="display:none">
       <video id="vid-preview" controls style="display:none;width:100%;max-height:160px;border-radius:8px;margin-top:.75rem"></video>
@@ -646,14 +646,30 @@ function openAchievementModal(id) {
     }
     reader.readAsDataURL(file)
   })
-  // Video URL live preview
+  // Video URL live preview (YouTube / Drive / MP4)
+  function getDrivePreviewId(url) {
+    const p = [/\/file\/d\/([a-zA-Z0-9_-]+)/, /[?&]id=([a-zA-Z0-9_-]+)/, /\/d\/([a-zA-Z0-9_-]+)/]
+    for (const r of p) { const m = url.match(r); if (m) return m[1] }
+    return null
+  }
+
   document.getElementById('f-video-url').addEventListener('input', e => {
     const url = e.target.value.trim()
     const box = document.getElementById('video-url-preview')
     if (!url) { box.innerHTML = ''; return }
-    if (url.includes('youtube.com') || url.includes('youtu.be')) {
+
+    if (url.includes('drive.google.com')) {
+      const id = getDrivePreviewId(url)
+      box.innerHTML = id
+        ? `<iframe width="100%" height="140"
+            src="https://drive.google.com/file/d/${id}/preview"
+            frameborder="0" allowfullscreen style="border-radius:8px"></iframe>`
+        : '<p style="color:var(--danger);font-size:.8rem">Could not extract Drive file ID — make sure the link is a share URL</p>'
+    } else if (url.includes('youtube.com') || url.includes('youtu.be')) {
       const id = url.match(/(?:v=|youtu\.be\/)([^&?/]+)/)?.[1]
-      box.innerHTML = id ? `<iframe width="100%" height="140" src="https://www.youtube.com/embed/${id}" frameborder="0" allowfullscreen style="border-radius:8px"></iframe>` : ''
+      box.innerHTML = id
+        ? `<iframe width="100%" height="140" src="https://www.youtube.com/embed/${id}" frameborder="0" allowfullscreen style="border-radius:8px"></iframe>`
+        : ''
     } else if (url.match(/\.(mp4|webm|mov)/i)) {
       box.innerHTML = `<video src="${url}" controls style="width:100%;max-height:140px;border-radius:8px"></video>`
     }
@@ -860,52 +876,40 @@ async function deleteDoc(collection, id, reloadFn) {
 }
 
 // ══════════════════════════════════════════════════════════
-//  IMAGE UPLOAD — ImgBB (free, just one API key needed)
-//  Get your key at: https://api.imgbb.com/
+//  FILE UPLOAD — Cloudinary (images + videos, free tier)
+//  Cloud: xrovjrel | Preset: yz6uwjhg (unsigned)
 // ══════════════════════════════════════════════════════════
-const IMGBB_API_KEY = '3a31b71fd050ba7e94680af699b07867'
+const CLOUDINARY_CLOUD  = 'xrovjrel'
+const CLOUDINARY_PRESET = 'yz6uwjhg'
 
 async function uploadImage(file) {
-  // Videos can't go to ImgBB — user must paste a URL instead
-  if (file.type.startsWith('video/')) {
-    throw new Error('Videos cannot be uploaded directly. Please paste a YouTube or MP4 link in the "Video URL" field instead.')
-  }
-
   const progress    = document.getElementById('upload-progress')
   const progressBar = document.getElementById('upload-progress-bar')
-  progress.style.display = 'block'
-  progressBar.style.width = '20%'
+  if (progress) { progress.style.display = 'block'; progressBar.style.width = '10%' }
 
-  // Convert image to base64
-  const base64 = await new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload  = () => resolve(reader.result.split(',')[1])
-    reader.onerror = reject
-    reader.readAsDataURL(file)
-  })
-
-  progressBar.style.width = '60%'
-
+  // Build FormData — send file directly (not base64), works for images AND videos
   const formData = new FormData()
-  formData.append('image', base64)
-  formData.append('name', `cmjl_${Date.now()}`)
+  formData.append('file', file)
+  formData.append('upload_preset', CLOUDINARY_PRESET)
 
-  const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
-    method: 'POST',
-    body: formData
-  })
+  // /auto/upload detects image vs video automatically
+  const endpoint = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/auto/upload`
 
-  progressBar.style.width = '90%'
+  if (progressBar) progressBar.style.width = '40%'
+
+  const res = await fetch(endpoint, { method: 'POST', body: formData })
+
+  if (progressBar) progressBar.style.width = '85%'
+
   const data = await res.json()
-  console.log('ImgBB response:', data)
+  console.log('Cloudinary upload response:', data)
 
-  if (!data.success) {
-    const reason = data?.error?.message || data?.status_txt || JSON.stringify(data)
-    throw new Error('Image upload failed: ' + reason)
+  if (!res.ok || data.error) {
+    throw new Error('Upload failed: ' + (data?.error?.message || res.statusText))
   }
 
-  progressBar.style.width = '100%'
-  return data.data.display_url
+  if (progressBar) progressBar.style.width = '100%'
+  return data.secure_url
 }
 
 // ══════════════════════════════════════════════════════════

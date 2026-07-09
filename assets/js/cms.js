@@ -23,18 +23,53 @@ const CMS_FIREBASE_CONFIG = {
   // ── Helpers ────────────────────────────────────────────────────────────
   const pad = n => String(n).padStart(2, '0')
 
-  // ── Detect and build media element (image / mp4 / youtube) ───────────────
+  // ── Extract Google Drive file ID ──────────────────────────────────────────
+  function getDriveId(url) {
+    const patterns = [
+      /\/file\/d\/([a-zA-Z0-9_-]+)/,   // /file/d/FILE_ID/view
+      /[?&]id=([a-zA-Z0-9_-]+)/,        // ?id=FILE_ID
+      /\/d\/([a-zA-Z0-9_-]+)/,          // /d/FILE_ID
+    ]
+    for (const p of patterns) {
+      const m = url.match(p)
+      if (m) return m[1]
+    }
+    return null
+  }
+
+  // ── Detect and build media element (image / video / youtube / drive) ───────
   function buildMedia(url, title) {
     if (!url) return ''
     const u = url.toLowerCase()
+
+    // Google Drive — convert to embed iframe (works for images & videos)
+    if (u.includes('drive.google.com')) {
+      const id = getDriveId(url)
+      if (!id) return ''
+      return `<iframe class="projects__img"
+        src="https://drive.google.com/file/d/${id}/preview"
+        frameborder="0" allowfullscreen
+        style="border-radius:inherit;width:100%;height:100%"></iframe>`
+    }
+
+    // YouTube
     if (u.includes('youtube.com') || u.includes('youtu.be')) {
       const match = url.match(/(?:v=|youtu\.be\/)([^&?/]+)/)
       const id = match ? match[1] : null
-      return id ? `<iframe class="projects__img" src="https://www.youtube.com/embed/${id}" frameborder="0" allowfullscreen style="border-radius:inherit"></iframe>` : ''
+      return id
+        ? `<iframe class="projects__img" src="https://www.youtube.com/embed/${id}"
+            frameborder="0" allowfullscreen style="border-radius:inherit"></iframe>`
+        : ''
     }
+
+    // MP4 / video file
     if (u.includes('.mp4') || u.includes('.webm') || u.includes('.mov')) {
-      return `<video class="projects__img" src="${url}" autoplay muted loop playsinline style="object-fit:cover;border-radius:inherit"></video>`
+      return `<video class="projects__img" src="${url}"
+        autoplay muted loop playsinline
+        style="object-fit:cover;border-radius:inherit"></video>`
     }
+
+    // Default: image
     return `<img src="${url}" alt="${title || 'achievement'}" class="projects__img">`
   }
 
