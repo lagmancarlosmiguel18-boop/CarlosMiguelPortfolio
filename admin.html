@@ -260,6 +260,12 @@
       <button class="nav-item" data-panel="work">
         <i class="ri-briefcase-line"></i> Work &amp; Education
       </button>
+      <button class="nav-item" data-panel="services">
+        <i class="ri-tools-line"></i> Services
+      </button>
+      <button class="nav-item" data-panel="testimonials">
+        <i class="ri-chat-quote-line"></i> Testimonials
+      </button>
 
       <div class="sidebar-spacer"></div>
 
@@ -292,6 +298,14 @@
           <div class="stat-card">
             <div class="stat-value" id="stat-education">—</div>
             <div class="stat-label">Education</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="stat-services">—</div>
+            <div class="stat-label">Services</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="stat-testimonials">—</div>
+            <div class="stat-label">Reviews</div>
           </div>
         </div>
       </div>
@@ -345,6 +359,32 @@
           </button>
         </div>
         <div class="work-list" id="work-list">
+          <div class="empty-state"><div class="spinner"></div></div>
+        </div>
+      </div>
+
+      <!-- SERVICES PANEL -->
+      <div class="section-panel" id="panel-services">
+        <div class="sec-header">
+          <div class="sec-title">Services</div>
+          <button class="btn btn-primary btn-sm" id="add-service-btn">
+            <i class="ri-add-line"></i> Add Service
+          </button>
+        </div>
+        <div class="work-list" id="services-list">
+          <div class="empty-state"><div class="spinner"></div></div>
+        </div>
+      </div>
+
+      <!-- TESTIMONIALS PANEL -->
+      <div class="section-panel" id="panel-testimonials">
+        <div class="sec-header">
+          <div class="sec-title">Testimonials</div>
+          <button class="btn btn-primary btn-sm" id="add-testimonial-btn">
+            <i class="ri-add-line"></i> Add Testimonial
+          </button>
+        </div>
+        <div class="achievement-grid" id="testimonials-grid">
           <div class="empty-state"><div class="spinner"></div></div>
         </div>
       </div>
@@ -473,14 +513,16 @@ function toast(msg, type = 'success') {
 //  LOAD ALL
 // ══════════════════════════════════════════════════════════
 async function loadAll() {
-  await Promise.all([loadAchievements(), loadWork(), updateStats()])
+  await Promise.all([loadAchievements(), loadWork(), loadServices(), loadTestimonials(), updateStats()])
   checkAndShowSeedBanner()
 }
 
 async function updateStats() {
-  const [acSnap, workSnap] = await Promise.all([
+  const [acSnap, workSnap, svcSnap, tstSnap] = await Promise.all([
     db.collection('achievements').get(),
-    db.collection('work').get()
+    db.collection('work').get(),
+    db.collection('services').get(),
+    db.collection('testimonials').get(),
   ])
   let expCount = 0, eduCount = 0
   workSnap.forEach(doc => {
@@ -491,6 +533,8 @@ async function updateStats() {
   document.getElementById('stat-achievements').textContent = acSnap.size
   document.getElementById('stat-experience').textContent   = expCount
   document.getElementById('stat-education').textContent    = eduCount
+  document.getElementById('stat-services').textContent     = svcSnap.size
+  document.getElementById('stat-testimonials').textContent = tstSnap.size
 }
 
 // ══════════════════════════════════════════════════════════
@@ -791,8 +835,10 @@ document.getElementById('modal-save-btn').addEventListener('click', async () => 
   btn.innerHTML = '<span class="spinner"></span> Saving...'
 
   try {
-    if (editingType === 'achievement') await saveAchievement()
-    else await saveWork()
+    if (editingType === 'achievement')  await saveAchievement()
+    else if (editingType === 'work')     await saveWork()
+    else if (editingType === 'service')  await saveService()
+    else if (editingType === 'testimonial') await saveTestimonial()
     closeModal()
     toast('Saved successfully!')
     loadAll()
@@ -924,6 +970,19 @@ const SEED_WORK = [
   { tab: 'education',  order: 3, title: 'Guagua National Colleges INC.', subtitle: 'Higher Education', year: 'Currently', description: "On the development side, I've mastered the core of the web using HTML and CSS to build intuitive user interfaces, while leveraging Java and Python to handle complex backend logic and data processing. My background in Networking ensures that I understand the infrastructure that keeps these systems secure and connected." },
 ]
 
+const SEED_SERVICES = [
+  { order: 1, title: 'Developer', description: 'Website creation with HTML, CSS, JavaScript. Professional websites with TypeScript, React, Node JS, and lots of creativity.', subtitle: 'Skills & Tools', skills: ['HTML', 'CSS', 'JavaScript', 'React', 'Python', 'Node Js', 'Next Js', 'PHP', 'GitHub'] },
+  { order: 2, title: 'Design', description: 'Web designer with Figma and Photoshop, creating motion designs with After Effects, creativity and design at its best.', subtitle: 'Skills & Tools', skills: ['Figma', 'Adobe XD', 'Photoshop', 'Ilustrator', '3D Modeling', 'Canva', 'After Effects'] },
+]
+
+const SEED_TESTIMONIALS = [
+  { order: 1, name: 'Jherzon Oligario', role: 'Colleague', imageUrl: '', rating: 5, description: "Working with Carlos Miguel has been a game-changer for our project. Their technical proficiency in the IT sector is impressive, but it's their specific expertise in game development that truly stands out." },
+  { order: 2, name: 'Kelly John Noca', role: 'Colleague', imageUrl: '', rating: 5, description: 'Finding a developer who understands both the technical architecture of a system and the nuances of user engagement is rare. Carlos Miguel is exactly that professional.' },
+  { order: 3, name: 'Justin Calma', role: 'Colleague', imageUrl: '', rating: 5, description: 'During our collaboration, they consistently turned abstract concepts into functional, high-performance reality. Their technical agility saved us countless hours of troubleshooting.' },
+  { order: 4, name: 'Micaella Mei Gutierrez', role: 'Colleague', imageUrl: '', rating: 5, description: "What sets them apart is their holistic approach to development. They don't just build in isolation; they ensure that every system works in perfect harmony with the rest of the stack." },
+  { order: 5, name: 'Alexandra Gutierrez', role: 'Colleague', imageUrl: '', rating: 5, description: 'Beyond just having a strong technical foundation, Carlos brings a level of logical precision to the table that is rare in the industry.' },
+]
+
 const SEED_ACHIEVEMENTS = [
   { order: 1, category: 'Web Development',  title: 'Certiport\nPython',  subtitle: 'Program Language used',     language: 'Python',        imageUrl: '', link: 'https://www.credly.com/users/carlos-miguel-lagman/badges#credly' },
   { order: 2, category: 'IT Essentials',    title: 'Cisco\nTechnician',  subtitle: 'Fundamentals of Computer',  language: 'Troubleshooting', imageUrl: '', link: 'https://www.credly.com/users/carlos-miguel-lagman/badges#credly' },
@@ -931,6 +990,255 @@ const SEED_ACHIEVEMENTS = [
   { order: 4, category: 'Python Essentials',title: 'Cisco\nPython',      subtitle: 'Program Language used',     language: 'Python',        imageUrl: '', link: 'https://www.credly.com/users/carlos-miguel-lagman/badges#credly' },
   { order: 5, category: 'Game Developer',   title: 'SunnyLand\nUnity',   subtitle: 'Program Language used',     language: 'CSharp',        imageUrl: '', link: 'https://drive.google.com/file/d/1SnLagwaf_jGnmj9u39hnyFQjAM4D1RHP/view' },
 ]
+
+// ══════════════════════════════════════════════════════════
+//  SERVICES
+// ══════════════════════════════════════════════════════════
+async function loadServices() {
+  const list = document.getElementById('services-list')
+  if (!list) return
+  list.innerHTML = '<div class="empty-state"><div class="spinner"></div></div>'
+  try {
+    const snap = await db.collection('services').get()
+    if (snap.empty) {
+      list.innerHTML = '<div class="empty-state"><i class="ri-tools-line"></i><p>No services yet.</p></div>'
+      return
+    }
+    const items = []
+    snap.forEach(doc => items.push({ id: doc.id, ...doc.data() }))
+    items.sort((a, b) => (a.order || 0) - (b.order || 0))
+    list.innerHTML = ''
+    items.forEach(item => list.appendChild(renderServiceItem(item.id, item)))
+  } catch(e) {
+    list.innerHTML = '<div class="empty-state"><p>' + e.message + '</p></div>'
+  }
+}
+
+function renderServiceItem(id, data) {
+  const div = document.createElement('div')
+  div.className = 'wk-item'
+  const skills = (data.skills || []).join(', ')
+  div.innerHTML = `
+    <div class="wk-info">
+      <div class="wk-title">${data.title || ''}</div>
+      <div class="wk-sub">${data.subtitle || 'Skills & Tools'}</div>
+      <div class="wk-year">Order ${data.order || 1}</div>
+      <div class="wk-desc">${data.description || ''}</div>
+      <div class="wk-desc" style="margin-top:.3rem;color:var(--accent-lt)">${skills}</div>
+    </div>
+    <div class="wk-actions">
+      <button class="btn btn-ghost btn-sm" onclick="openServiceModal('${id}')">
+        <i class="ri-pencil-line"></i> Edit
+      </button>
+      <button class="btn btn-danger btn-sm" onclick="deleteDoc('services','${id}',loadServices)">
+        <i class="ri-delete-bin-line"></i>
+      </button>
+    </div>
+  `
+  return div
+}
+
+document.getElementById('add-service-btn').addEventListener('click', () => openServiceModal(null))
+
+function openServiceModal(id) {
+  editingId = id; editingType = 'service'
+  document.getElementById('modal-title').textContent = id ? 'Edit Service' : 'Add Service'
+  document.getElementById('modal-body').innerHTML = `
+    <div class="form-group">
+      <label>Order</label>
+      <input type="number" id="f-order" min="1" placeholder="1">
+    </div>
+    <div class="form-group">
+      <label>Title</label>
+      <input type="text" id="f-title" placeholder="Developer">
+    </div>
+    <div class="form-group">
+      <label>Description</label>
+      <textarea id="f-description" placeholder="Website creation with HTML, CSS..."></textarea>
+    </div>
+    <div class="form-group">
+      <label>Section Subtitle</label>
+      <input type="text" id="f-subtitle" placeholder="Skills & Tools">
+    </div>
+    <div class="form-group">
+      <label>Skills <span style="color:var(--muted)">(comma-separated)</span></label>
+      <textarea id="f-skills" placeholder="HTML, CSS, JavaScript, React"></textarea>
+    </div>
+  `
+  if (id) {
+    db.collection('services').doc(id).get().then(doc => {
+      const d = doc.data()
+      document.getElementById('f-order').value       = d.order || ''
+      document.getElementById('f-title').value       = d.title || ''
+      document.getElementById('f-description').value = d.description || ''
+      document.getElementById('f-subtitle').value    = d.subtitle || ''
+      document.getElementById('f-skills').value      = (d.skills || []).join(', ')
+    })
+  }
+  openModal()
+}
+
+async function saveService() {
+  const skillsRaw = document.getElementById('f-skills').value
+  const skills = skillsRaw.split(',').map(s => s.trim()).filter(Boolean)
+  const data = {
+    order:       parseInt(document.getElementById('f-order').value) || 1,
+    title:       document.getElementById('f-title').value.trim(),
+    description: document.getElementById('f-description').value.trim(),
+    subtitle:    document.getElementById('f-subtitle').value.trim() || 'Skills & Tools',
+    skills,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }
+  if (editingId) {
+    await db.collection('services').doc(editingId).update(data)
+  } else {
+    data.createdAt = firebase.firestore.FieldValue.serverTimestamp()
+    await db.collection('services').add(data)
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+//  TESTIMONIALS
+// ══════════════════════════════════════════════════════════
+async function loadTestimonials() {
+  const grid = document.getElementById('testimonials-grid')
+  if (!grid) return
+  grid.innerHTML = '<div class="empty-state"><div class="spinner"></div></div>'
+  try {
+    const snap = await db.collection('testimonials').get()
+    if (snap.empty) {
+      grid.innerHTML = '<div class="empty-state"><i class="ri-chat-quote-line"></i><p>No testimonials yet.</p></div>'
+      return
+    }
+    const items = []
+    snap.forEach(doc => items.push({ id: doc.id, ...doc.data() }))
+    items.sort((a, b) => (a.order || 0) - (b.order || 0))
+    grid.innerHTML = ''
+    items.forEach(item => grid.appendChild(renderTestimonialCard(item.id, item)))
+  } catch(e) {
+    grid.innerHTML = '<div class="empty-state"><p>' + e.message + '</p></div>'
+  }
+}
+
+function renderTestimonialCard(id, data) {
+  const card = document.createElement('div')
+  card.className = 'ac-card'
+  const stars = Array(5).fill(0).map((_, i) =>
+    `<i class="ri-star-${i < Math.floor(data.rating || 5) ? 'fill' : 'line'}" style="color:#f59e0b;font-size:.8rem"></i>`
+  ).join('')
+  card.innerHTML = `
+    <div class="ac-card-img">
+      ${data.imageUrl
+        ? `<img src="${data.imageUrl}" alt="${data.name}" style="width:100%;height:140px;object-fit:cover">`
+        : '<i class="ri-user-3-line" style="font-size:2rem;color:var(--muted)"></i>'}
+    </div>
+    <div class="ac-card-body">
+      <div class="ac-card-num">${stars} ${(data.rating || 5).toFixed(1)}</div>
+      <div class="ac-card-title">${data.name || ''}</div>
+      <div class="ac-card-cat" style="font-size:.72rem;line-height:1.5">
+        ${(data.description || '').slice(0, 80)}${data.description?.length > 80 ? '…' : ''}
+      </div>
+      <div class="ac-card-actions" style="margin-top:.5rem">
+        <button class="btn btn-ghost btn-sm" onclick="openTestimonialModal('${id}')">
+          <i class="ri-pencil-line"></i> Edit
+        </button>
+        <button class="btn btn-danger btn-sm" onclick="deleteDoc('testimonials','${id}',loadTestimonials)">
+          <i class="ri-delete-bin-line"></i>
+        </button>
+      </div>
+    </div>
+  `
+  return card
+}
+
+document.getElementById('add-testimonial-btn').addEventListener('click', () => openTestimonialModal(null))
+
+function openTestimonialModal(id) {
+  editingId = id; editingType = 'testimonial'
+  uploadedImageUrl = null
+  document.getElementById('modal-title').textContent = id ? 'Edit Testimonial' : 'Add Testimonial'
+  document.getElementById('modal-body').innerHTML = `
+    <div class="form-group">
+      <label>Order</label>
+      <input type="number" id="f-order" min="1" placeholder="1">
+    </div>
+    <div class="form-group">
+      <label>Name</label>
+      <input type="text" id="f-title" placeholder="John Doe">
+    </div>
+    <div class="form-group">
+      <label>Role / Relation <span style="color:var(--muted)">(optional)</span></label>
+      <input type="text" id="f-subtitle" placeholder="Classmate, Client, Colleague...">
+    </div>
+    <div class="form-group">
+      <label>Rating (1–5)</label>
+      <input type="number" id="f-rating" min="1" max="5" step="0.1" placeholder="5.0">
+    </div>
+    <div class="form-group">
+      <label>Message</label>
+      <textarea id="f-description" rows="4" placeholder="Write their testimonial here..."></textarea>
+    </div>
+    <div class="form-group">
+      <label>Photo</label>
+      <div class="img-upload-area" id="upload-area">
+        <input type="file" id="f-image" accept="image/*">
+        <i class="ri-upload-cloud-2-line"></i>
+        <p>Upload profile photo</p>
+      </div>
+      <img class="img-preview" id="img-preview" src="" alt="preview" style="display:none">
+      <div class="upload-progress" id="upload-progress">
+        <div class="upload-progress-bar" id="upload-progress-bar"></div>
+      </div>
+    </div>
+  `
+  if (id) {
+    db.collection('testimonials').doc(id).get().then(doc => {
+      const d = doc.data()
+      document.getElementById('f-order').value       = d.order || ''
+      document.getElementById('f-title').value       = d.name || ''
+      document.getElementById('f-subtitle').value    = d.role || ''
+      document.getElementById('f-rating').value      = d.rating || 5
+      document.getElementById('f-description').value = d.description || ''
+      if (d.imageUrl) {
+        const prev = document.getElementById('img-preview')
+        prev.src = d.imageUrl; prev.style.display = 'block'
+        uploadedImageUrl = d.imageUrl
+      }
+    })
+  }
+  document.getElementById('f-image').addEventListener('change', e => {
+    const file = e.target.files[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = ev => {
+      const prev = document.getElementById('img-preview')
+      prev.src = ev.target.result; prev.style.display = 'block'
+    }
+    reader.readAsDataURL(file)
+  })
+  openModal()
+}
+
+async function saveTestimonial() {
+  const imageFile = document.getElementById('f-image').files[0]
+  let imageUrl = uploadedImageUrl || ''
+  if (imageFile) imageUrl = await uploadImage(imageFile)
+  const data = {
+    order:       parseInt(document.getElementById('f-order').value) || 1,
+    name:        document.getElementById('f-title').value.trim(),
+    role:        document.getElementById('f-subtitle').value.trim(),
+    rating:      parseFloat(document.getElementById('f-rating').value) || 5,
+    description: document.getElementById('f-description').value.trim(),
+    imageUrl,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }
+  if (editingId) {
+    await db.collection('testimonials').doc(editingId).update(data)
+  } else {
+    data.createdAt = firebase.firestore.FieldValue.serverTimestamp()
+    await db.collection('testimonials').add(data)
+  }
+}
 
 async function seedExistingData() {
   const btn = document.getElementById('seed-btn')
@@ -942,14 +1250,19 @@ async function seedExistingData() {
 
     // Seed work items
     SEED_WORK.forEach(item => {
-      const ref = db.collection('work').doc()
-      batch.set(ref, { ...item, createdAt: firebase.firestore.FieldValue.serverTimestamp() })
+      batch.set(db.collection('work').doc(), { ...item, createdAt: firebase.firestore.FieldValue.serverTimestamp() })
     })
-
     // Seed achievements
     SEED_ACHIEVEMENTS.forEach(item => {
-      const ref = db.collection('achievements').doc()
-      batch.set(ref, { ...item, createdAt: firebase.firestore.FieldValue.serverTimestamp() })
+      batch.set(db.collection('achievements').doc(), { ...item, createdAt: firebase.firestore.FieldValue.serverTimestamp() })
+    })
+    // Seed services
+    SEED_SERVICES.forEach(item => {
+      batch.set(db.collection('services').doc(), { ...item, createdAt: firebase.firestore.FieldValue.serverTimestamp() })
+    })
+    // Seed testimonials
+    SEED_TESTIMONIALS.forEach(item => {
+      batch.set(db.collection('testimonials').doc(), { ...item, createdAt: firebase.firestore.FieldValue.serverTimestamp() })
     })
 
     await batch.commit()

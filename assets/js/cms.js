@@ -62,7 +62,14 @@ const CMS_FIREBASE_CONFIG = {
         : ''
     }
 
-    // MP4 / video file
+    // Cloudinary video URL (contains /video/ in path)
+    if (u.includes('cloudinary.com') && u.includes('/video/')) {
+      return `<video class="projects__img" src="${url}"
+        autoplay muted loop playsinline
+        style="object-fit:cover;border-radius:inherit"></video>`
+    }
+
+    // Direct video file by extension
     if (u.includes('.mp4') || u.includes('.webm') || u.includes('.mov')) {
       return `<video class="projects__img" src="${url}"
         autoplay muted loop playsinline
@@ -205,13 +212,139 @@ const CMS_FIREBASE_CONFIG = {
 
   // ── Boot ───────────────────────────────────────────────────────────────
   // Wait for DOM + Swiper library to be ready
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-      loadAchievements()
-      loadWork()
-    })
-  } else {
+  function bootCMS() {
     loadAchievements()
     loadWork()
+    loadServices()
+    loadTestimonials()
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bootCMS)
+  } else {
+    bootCMS()
   }
 })()
+
+  // ── Build a service card ────────────────────────────────────────────────
+  function buildServiceCard(data, isFirst) {
+    const div = document.createElement('div')
+    div.className = `services__card ${isFirst ? 'services-open' : 'services-close'}`
+    const skills = (data.skills || []).map(s => `<li class="services__skill">${s}</li>`).join('')
+    div.innerHTML = `
+      <div class="blob blob-2"></div>
+      <div class="services__data">
+        <h2 class="services__title">${data.title || ''}</h2>
+        <p class="services__description">${data.description || ''}</p>
+      </div>
+      <div class="services__info">
+        <h3 class="services__subtitle">${data.subtitle || 'Skills & Tools'}</h3>
+        <ul class="services__skills">${skills}</ul>
+      </div>
+      <button class="services__button">
+        <i class="ri-arrow-down-s-line"></i>
+      </button>
+    `
+    return div
+  }
+
+  // ── Re-initialize services accordion after dynamic inject ───────────────
+  function initServicesAccordion() {
+    const buttons = document.querySelectorAll('.services__button')
+    buttons.forEach(button => {
+      const info = button.parentNode.querySelector('.services__info')
+      if (info) {
+        const open = button.parentNode.classList.contains('services-open')
+        info.style.height = open ? info.scrollHeight + 'px' : '0'
+      }
+      button.addEventListener('click', () => {
+        const cards  = document.querySelectorAll('.services__card')
+        const card   = button.parentNode
+        const cardInfo = card.querySelector('.services__info')
+        const isOpen = card.classList.contains('services-open')
+
+        cards.forEach(c => {
+          c.classList.replace('services-open', 'services-close')
+          const i = c.querySelector('.services__info')
+          if (i) i.style.height = '0'
+        })
+        if (!isOpen) {
+          card.classList.replace('services-close', 'services-open')
+          if (cardInfo) cardInfo.style.height = cardInfo.scrollHeight + 'px'
+        }
+      })
+    })
+  }
+
+  // ── Load services ───────────────────────────────────────────────────────
+  async function loadServices() {
+    try {
+      const snap = await db.collection('services').get()
+      if (snap.empty) return
+
+      const container = document.querySelector('.services__container')
+      if (!container) return
+
+      const items = []
+      snap.forEach(doc => items.push(doc.data()))
+      items.sort((a, b) => (a.order || 0) - (b.order || 0))
+
+      container.querySelectorAll('.services__card').forEach(el => el.remove())
+      items.forEach((data, i) => container.appendChild(buildServiceCard(data, i === 0)))
+
+      // Re-init accordion after inject
+      requestAnimationFrame(() => initServicesAccordion())
+    } catch(err) {
+      console.info('CMS: using static services', err.message)
+    }
+  }
+
+  // ── Build a testimonial card ────────────────────────────────────────────
+  function buildTestimonialCard(data) {
+    const article = document.createElement('article')
+    article.className = 'testimonials__card'
+    const rating   = parseFloat(data.rating || 5)
+    const starsHtml = Array(5).fill(0).map((_, i) =>
+      `<i class="ri-star-${i < Math.floor(rating) ? 'fill' : 'line'}"></i>`
+    ).join('')
+    article.innerHTML = `
+      <div class="blob"></div>
+      <div class="testimonials__data">
+        ${data.imageUrl ? `<img src="${data.imageUrl}" alt="${data.name}" class="testimonials__img">` : ''}
+        <h2 class="testimonials__name">${data.name || ''}</h2>
+        ${data.role ? `<p style="font-size:.72rem;color:var(--first-color);margin-bottom:.3rem">${data.role}</p>` : ''}
+        <div class="testimonials__rating">
+          <div class="testimonials__stars">${starsHtml}</div>
+          <h3 class="testimonials__number">${rating.toFixed(1)}</h3>
+        </div>
+        <p class="testimonials__description">${data.description || ''}</p>
+      </div>
+    `
+    return article
+  }
+
+  // ── Load testimonials ───────────────────────────────────────────────────
+  async function loadTestimonials() {
+    try {
+      const snap = await db.collection('testimonials').get()
+      if (snap.empty) return
+
+      const tracks = document.querySelectorAll('.testimonials__content')
+      if (!tracks.length) return
+
+      const items = []
+      snap.forEach(doc => items.push(doc.data()))
+      items.sort((a, b) => (a.order || 0) - (b.order || 0))
+
+      // Populate each track (portfolio has 2 rows)
+      tracks.forEach((track, trackIdx) => {
+        track.innerHTML = ''
+        // Second track shows items in reverse order
+        const list = trackIdx === 1 ? [...items].reverse() : items
+        // Duplicate for infinite scroll
+        ;[...list, ...list].forEach(data => track.appendChild(buildTestimonialCard(data)))
+      })
+    } catch(err) {
+      console.info('CMS: using static testimonials', err.message)
+    }
+  }
