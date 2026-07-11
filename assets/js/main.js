@@ -191,6 +191,10 @@ tabs.forEach((tab) => {
     tabs.forEach((t) => t.classList.remove('work-active'))
     tab.classList.add('work-active')
     targetContent.classList.add('work-active')
+
+    // Force repaint — ScrollReveal sets visibility:hidden on hidden tab content.
+    // getBoundingClientRect() flushes the style pipeline and makes it visible.
+    void targetContent.getBoundingClientRect()
   })
 })
 
@@ -416,7 +420,8 @@ sr.reveal('.about__data',  { origin: 'left' })
 sr.reveal('.about__image', { origin: 'right' })
 sr.reveal('.projects__swiper', { origin: 'bottom', delay: 300 })
 sr.reveal('.work__tabs',    { origin: 'top' })
-sr.reveal('.work__content', { origin: 'bottom', delay: 200 })
+// NOTE: .work__content intentionally excluded from ScrollReveal —
+// SR's visibility:hidden on hidden tabs breaks tab switching
 sr.reveal('.services__card', { interval: 150, origin: 'bottom' })
 sr.reveal('.testimonials .section__title', { origin: 'left' })
 sr.reveal('.skills .section__title', { origin: 'top' })
